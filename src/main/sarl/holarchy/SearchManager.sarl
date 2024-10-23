@@ -1,0 +1,53 @@
+/** 
+ * 
+ */
+package holarchy
+
+import io.sarl.api.core.Initialize
+import io.sarl.api.core.Lifecycle
+import io.sarl.api.core.DefaultContextInteractions
+import io.sarl.api.core.Logging
+import java.io.File
+import java.util.UUID
+import io.sarl.api.core.ParticipantJoined
+import java.util.concurrent.ConcurrentLinkedQueue
+
+/** 
+ * 
+ */
+agent SearchManager {
+	uses Lifecycle, Logging, DefaultContextInteractions
+
+	var root_str = "Tree/Dir1"
+	var root_path = new File(root_str)
+	var criteria = ".sarl"
+	
+	var aid : UUID
+	var paths : ConcurrentLinkedQueue<File>
+	
+
+	on Initialize {
+		synchronized (this) {
+			aid = UUID::randomUUID
+			paths = new ConcurrentLinkedQueue
+			spawnInContextWithID(SearchAgent, aid, defaultContext, true)
+		}
+		
+		loggingName = "Search Manager"
+	}
+	
+	on ParticipantJoined [occurrence.source.ID == aid] {
+		emit(new SearchRequest(root_path, criteria)) [it.ID == aid]
+	}
+	
+	on FileFound {
+		info("File received:" + occurrence.path)
+		paths.add(occurrence.path)
+	}
+
+	on SearchFinished {
+		info("Holarchy destroyed. Waiting awhile to ensure that all pending context destruction is processed.")
+		info("Files found :" + paths)
+		killMe
+	}
+}

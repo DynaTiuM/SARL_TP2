@@ -1,0 +1,80 @@
+package holarchy
+
+import io.sarl.api.core.DefaultContextInteractions
+import io.sarl.api.core.Initialize
+import io.sarl.api.core.InnerContextAccess
+import io.sarl.api.core.Lifecycle
+import io.sarl.api.core.Logging
+import java.util.UUID
+import java.io.File
+import io.sarl.api.core.ParticipantJoined
+import java.util.concurrent.ConcurrentHashMap
+
+
+agent SearchAgent {
+
+	uses Lifecycle, InnerContextAccess, DefaultContextInteractions, Logging
+
+	var directory : File
+	var criteria = ".sarl"
+	var parent : UUID
+
+	var map = new ConcurrentHashMap<UUID, File>()
+
+	on Initialize {
+		parent = occurrence.spawner
+		if (occurrence.parameters.isEmpty) {
+			loggingName = "ROOT AGENT"
+		}
+	}
+
+	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
+		(occurrence.spaceID == innerContext.defaultSpace.spaceID)] {
+		innerContext.defaultSpace.emit(occurrence.source.ID,
+			new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
+	}
+
+	on SearchRequest {
+		criteria = occurrence.criteria
+		directory = occurrence.path
+
+		if (!directory.exists) {
+			throw new IllegalArgumentException("The directory doesn't exist!")
+		}
+
+		for (subdir : directory.listFiles().toList.filter[isDirectory()]) {
+			info(subdir.getName + " est un dossier.")
+			val aid = UUID::randomUUID
+			map.put(aid, new File(subdir.toString()))
+			spawnInContextWithID(SearchAgent, aid, innerContext)
+		}
+		for (subfile : directory.listFiles().toList.filter[isFile() && getName.contains(criteria)]) {
+			info(subfile.getName + " est un fichier")
+			var fileFound = new File(directory, subfile.getName)
+			emit(new FileFound(fileFound))[it.ID == occurrence.source.ID]
+		}
+		
+		if (map.size <= 0) {
+			info("No more tasks: killing myself.")
+			emit(new SearchFinished)[it.ID == parent]
+			killMe
+		}
+	}
+
+	on FileFound {
+		emit(new FileFound(occurrence.path))[it.ID == parent]
+	}
+
+	on SearchFinished [map.containsKey(occurrence.source.ID)] {
+		var childID = occurrence.source.ID
+		if (map.containsKey(childID)) {
+			map.remove(childID)
+			info("Child removed. Remaining children: " + map.size)
+			if (map.size <= 0) {
+				info("No more children: killing myself.")
+				emit(new SearchFinished)[it.ID == parent]
+				killMe
+			}
+		}
+	}
+}

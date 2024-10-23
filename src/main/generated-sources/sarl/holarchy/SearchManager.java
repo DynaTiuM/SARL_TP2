@@ -32,7 +32,7 @@ import org.eclipse.xtext.xbase.lib.Pure;
 @SarlElementType(19)
 @SuppressWarnings("all")
 public class SearchManager extends Agent {
-  private File root_path;
+  private File rootPath;
 
   private String criteria;
 
@@ -43,7 +43,7 @@ public class SearchManager extends Agent {
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     Object _get = occurrence.parameters[0];
     File _file = new File((_get == null ? null : _get.toString()));
-    this.root_path = _file;
+    this.rootPath = _file;
     Object _get_1 = occurrence.parameters[1];
     this.criteria = (_get_1 == null ? null : _get_1.toString());
     synchronized (this) {
@@ -60,7 +60,7 @@ public class SearchManager extends Agent {
 
   private void $behaviorUnit$ParticipantJoined$1(final ParticipantJoined occurrence) {
     DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
-    SearchRequest _searchRequest = new SearchRequest(this.root_path, this.criteria);
+    SearchRequest _searchRequest = new SearchRequest(this.rootPath, this.criteria);
     class $SerializableClosureProxy implements Scope<Address> {
       
       private final UUID $_aid;

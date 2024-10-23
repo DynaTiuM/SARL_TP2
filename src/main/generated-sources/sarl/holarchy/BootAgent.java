@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import org.eclipse.xtext.xbase.lib.Extension;
+import org.eclipse.xtext.xbase.lib.Functions.Function0;
 import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.Pure;
 import ui.SearchManagerGUI;
@@ -25,14 +26,23 @@ import ui.SearchManagerGUI;
 @SarlElementType(19)
 @SuppressWarnings("all")
 public class BootAgent extends Agent {
-  private final SearchManagerCallback searchManagerCallback = new SearchManagerCallback() {
+  private final SearchManagerCallback searchManagerCallback = new Function0<SearchManagerCallback>() {
     @Override
-    public void onSearch(final String path, final String criteria) {
-      InputOutput.<String>println(((("Received from UI: Path: " + path) + ", Criteria: ") + criteria));
-      Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = BootAgent.this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class, path, criteria);
+    public SearchManagerCallback apply() {
+      abstract class __BootAgent_1 extends SearchManagerCallback {
+        public abstract void onSearch(final String path, final String criteria);
+      }
+
+      __BootAgent_1 ___BootAgent_1 = new __BootAgent_1() {
+        public void onSearch(final String path, final String criteria) {
+          InputOutput.<String>println(((("Received from UI: Path: " + path) + ", Criteria: ") + criteria));
+          Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = BootAgent.this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class, path, criteria);
+        }
+      };
+      return ___BootAgent_1;
     }
-  };
+  }.apply();
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     SearchManagerGUI ui = new SearchManagerGUI(this.searchManagerCallback);

@@ -14,7 +14,7 @@ import javax.swing.JFrame;
 public class SearchManagerGUI extends JFrame {
   public SearchManagerGUI(final SearchManagerCallback callback) {
     this.setTitle("Search Manager GUI");
-    Dimension _dimension = new Dimension(300, 300);
+    Dimension _dimension = new Dimension(500, 300);
     this.setPreferredSize(_dimension);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     final SearchManagerPanel panel = new SearchManagerPanel(callback);

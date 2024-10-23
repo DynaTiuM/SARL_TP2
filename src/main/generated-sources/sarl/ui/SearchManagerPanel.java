@@ -27,7 +27,7 @@ import org.eclipse.xtext.xbase.lib.Pure;
 public class SearchManagerPanel extends JPanel {
   private final JTextField textField = new JTextField(15);
 
-  private LinkedList<String> extensions = CollectionLiterals.<String>newLinkedList(".sarl", ".txt");
+  private final LinkedList<String> extensions = CollectionLiterals.<String>newLinkedList(".sarl", ".txt");
 
   private final JComboBox<String> comboBox = new JComboBox<String>(((String[])Conversions.unwrapArray(this.extensions, String.class)));
 

@@ -18,15 +18,15 @@ import java.util.concurrent.ConcurrentLinkedQueue
 agent SearchManager {
 	uses Lifecycle, Logging, DefaultContextInteractions
 
-	var root_str = "Tree/Dir1"
-	var root_path = new File(root_str)
-	var criteria = ".sarl"
+	var root_path : File
+	var criteria : String
 	
 	var aid : UUID
 	var paths : ConcurrentLinkedQueue<File>
 	
-
 	on Initialize {
+		this.root_path = new File(occurrence.parameters.get(0) as String)
+		this.criteria = occurrence.parameters.get(1) as String
 		synchronized (this) {
 			aid = UUID::randomUUID
 			paths = new ConcurrentLinkedQueue

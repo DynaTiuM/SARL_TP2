@@ -18,18 +18,14 @@ import java.awt.^event.ActionListener
 import javax.swing.JFileChooser
 
 class SearchManagerGUI extends JFrame {
-  // Constructor
 	new(callback : SearchManagerCallback) {
-	    // Set up the frame
 	    this.title = "Search Manager GUI"
 	    this.preferredSize = new Dimension(300, 300)
 	    this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 	
-	    // Create an instance of the custom panel and add it to the frame
-	    val panel = new SearchManagerPanel(callback) // Pass the callback here
+	    val panel = new SearchManagerPanel(callback)
 	    this.contentPane.add(panel, BorderLayout.CENTER)
 	
-	    // Pack and display the frame
 	    this.pack()
 	    this.setVisible(true)
 	    this.requestFocus()

@@ -32,17 +32,20 @@ import org.eclipse.xtext.xbase.lib.Pure;
 @SarlElementType(19)
 @SuppressWarnings("all")
 public class SearchManager extends Agent {
-  private String root_str = "Tree/Dir1";
+  private File root_path;
 
-  private File root_path = new File(this.root_str);
-
-  private String criteria = ".sarl";
+  private String criteria;
 
   private UUID aid;
 
   private ConcurrentLinkedQueue<File> paths;
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
+    Object _get = occurrence.parameters[0];
+    File _file = new File((_get == null ? null : _get.toString()));
+    this.root_path = _file;
+    Object _get_1 = occurrence.parameters[1];
+    this.criteria = (_get_1 == null ? null : _get_1.toString());
     synchronized (this) {
       this.aid = UUID.randomUUID();
       ConcurrentLinkedQueue<File> _concurrentLinkedQueue = new ConcurrentLinkedQueue<File>();
@@ -245,8 +248,6 @@ public class SearchManager extends Agent {
     if (getClass() != obj.getClass())
       return false;
     SearchManager other = (SearchManager) obj;
-    if (!java.util.Objects.equals(this.root_str, other.root_str))
-      return false;
     if (!java.util.Objects.equals(this.criteria, other.criteria))
       return false;
     if (!java.util.Objects.equals(this.aid, other.aid))
@@ -260,7 +261,6 @@ public class SearchManager extends Agent {
   public int hashCode() {
     int result = super.hashCode();
     final int prime = 31;
-    result = prime * result + java.util.Objects.hashCode(this.root_str);
     result = prime * result + java.util.Objects.hashCode(this.criteria);
     result = prime * result + java.util.Objects.hashCode(this.aid);
     return result;

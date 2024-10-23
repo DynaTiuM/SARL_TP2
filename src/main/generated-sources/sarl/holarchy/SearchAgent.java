@@ -39,7 +39,7 @@ import org.eclipse.xtext.xbase.lib.Pure;
 public class SearchAgent extends Agent {
   private File directory;
 
-  private String criteria = ".sarl";
+  private String criteria;
 
   private UUID parent;
 

@@ -16,7 +16,7 @@ agent SearchAgent {
 	uses Lifecycle, InnerContextAccess, DefaultContextInteractions, Logging
 
 	var directory : File
-	var criteria = ".sarl"
+	var criteria : String
 	var parent : UUID
 
 	var map = new ConcurrentHashMap<UUID, File>()

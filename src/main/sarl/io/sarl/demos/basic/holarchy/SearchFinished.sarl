@@ -1,0 +1,9 @@
+/** 
+ * 
+ */
+package io.sarl.demos.basic.holarchy
+
+/** 
+ * 
+ */
+event SearchFinished

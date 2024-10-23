@@ -1,0 +1,19 @@
+/** 
+ * 
+ */
+package io.sarl.demos.basic.holarchy
+
+import java.io.File
+
+/** 
+ * 
+ */
+event SearchRequest {
+	val path: File
+	val criteria: String
+	
+	new(path: File, criteria: String) {
+		this.path = path
+		this.criteria = criteria
+	}
+}

@@ -1,0 +1,17 @@
+/** 
+ * 
+ */
+package io.sarl.demos.basic.holarchy
+
+import java.io.File
+
+/** 
+ * 
+ */
+event FileFound {
+	val path: File
+	
+	new(path: File) {
+		this.path = path
+	}
+}

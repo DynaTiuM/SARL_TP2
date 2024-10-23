@@ -1,0 +1,108 @@
+/** 
+ * 
+ */
+package io.sarl.demos.basic.holarchy
+
+import io.sarl.api.core.DefaultContextInteractions
+import io.sarl.api.core.Destroy
+import io.sarl.api.core.Initialize
+import io.sarl.api.core.InnerContextAccess
+import io.sarl.api.core.Lifecycle
+import io.sarl.api.core.Logging
+import io.sarl.api.core.MemberLeft
+import io.sarl.api.core.Schedules
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.io.File
+import io.sarl.api.core.ParticipantJoined
+import java.util.concurrent.ConcurrentHashMap
+import io.sarl.api.core.Behaviors
+
+/** 
+ * Holon architecture used to create a whole self-similar hierarchy of agent *
+ * @author <a href="http://www.ciad-lab.fr/nicolas_gaud">Nicolas Gaud</a>
+ */
+agent SearchAgent {
+
+	uses Lifecycle, InnerContextAccess, Schedules, DefaultContextInteractions, Logging, Behaviors
+
+	var directory : File
+	var criteria = ".sarl"
+	var parent : UUID
+
+	var map = new ConcurrentHashMap<UUID, File>()
+
+	on Initialize {
+		parent = occurrence.spawner
+
+		if (occurrence.parameters.isEmpty) {
+		} else {
+			loggingName = "ROOT AGENT"
+		}
+	}
+
+	on MemberLeft {
+		// Could also worked with
+		// on ParticipantLeft [occurrence.spaceID.contextID == innerContext.ID] { // Being sure the corresponding event comes from my internal context
+		// Event-based holarchy destruction
+		info("a member left : " + occurrence.agentID)
+		var childID = occurrence.agentID // use the source of the event if you switch to Participantleft
+		if (map.contains(childID)) {
+			info("before : " + map)
+			map.remove(childID)
+			info("after : " + map)
+			if (map.size <= 0) {
+				info("No more child: I'm killing myself.")
+				killMe
+			}
+		}
+	}
+
+	on Destroy {
+		info("Je me suicide : " + occurrence.source.ID)
+		emit(new SearchFinished)[it.ID == parent]
+		killMe
+	}
+
+	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
+		(occurrence.spaceID == innerContext.defaultSpace.spaceID)] {
+		innerContext.defaultSpace.emit(occurrence.source.ID,
+			new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
+		// emit(new SearchRequest(map.get(occurrence.source.ID) as File, criteria)) [it.ID == occurrence.source.ID]
+	}
+
+	on SearchRequest {
+		criteria = occurrence.criteria
+		directory = occurrence.path
+
+		if (!directory.exists) {
+			throw new IllegalArgumentException("The directory doesn't exist!")
+		}
+
+		for (subdir : directory.listFiles().toList.filter[isDirectory()]) {
+			info(subdir.getName + " est un dossier.")
+			val aid = UUID::randomUUID
+
+			map.put(aid, new File(subdir.toString()))
+
+			spawnInContextWithID(SearchAgent, aid, innerContext)
+		}
+		for (subfile : directory.listFiles().toList.filter[isFile() && getName.contains(criteria)]) {
+			info(subfile.getName + " est un fichier")
+			var fileFound = new File(directory, subfile.getName)
+			emit(new FileFound(fileFound))[it.ID == occurrence.source.ID]
+		}
+	}
+
+	on FileFound {
+		emit(new FileFound(occurrence.path))[it.ID == parent]
+		if (map.isEmpty()) {
+			//emit(new Destroy())[it.ID == occurrence.source.ID]
+			emit(new Destroy)[it.ID == occurrence.source.ID]
+		}
+	}
+
+	on SearchFinished {
+		emit(new SearchFinished)[it.ID == parent]
+	}
+}

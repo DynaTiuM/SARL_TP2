@@ -45,6 +45,8 @@ public class SearchManager extends Agent {
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     this.aid = UUID.randomUUID();
+    ConcurrentLinkedQueue<File> _concurrentLinkedQueue = new ConcurrentLinkedQueue<File>();
+    this.paths = _concurrentLinkedQueue;
     Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
     DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawnInContextWithID(SearchAgent.class, this.aid, _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.getDefaultContext(), Boolean.valueOf(true));
@@ -93,11 +95,14 @@ public class SearchManager extends Agent {
   private void $behaviorUnit$FileFound$2(final FileFound occurrence) {
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("File received:" + occurrence.path));
+    this.paths.add(occurrence.path);
   }
 
   private void $behaviorUnit$SearchFinished$3(final SearchFinished occurrence) {
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("Holarchy destroyed. Waiting awhile to ensure that all pending context destruction is processed.");
+    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info(("Files found :" + this.paths));
     Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
   }

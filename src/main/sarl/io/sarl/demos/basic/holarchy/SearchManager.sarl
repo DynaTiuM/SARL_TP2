@@ -29,6 +29,7 @@ agent SearchManager {
 
 	on Initialize {
 		aid = UUID::randomUUID
+		paths = new ConcurrentLinkedQueue
 		
 		spawnInContextWithID(SearchAgent, aid, defaultContext, true)
 		loggingName = "Search Manager"
@@ -40,10 +41,12 @@ agent SearchManager {
 	
 	on FileFound {
 		info("File received:" + occurrence.path)
+		paths.add(occurrence.path)
 	}
 
 	on SearchFinished {
 		info("Holarchy destroyed. Waiting awhile to ensure that all pending context destruction is processed.")
+		info("Files found :" + paths)
 		killMe
 	}
 }

@@ -3,7 +3,6 @@ package io.sarl.demos.basic.holarchy;
 import com.google.common.base.Objects;
 import io.sarl.api.core.Behaviors;
 import io.sarl.api.core.DefaultContextInteractions;
-import io.sarl.api.core.Destroy;
 import io.sarl.api.core.Initialize;
 import io.sarl.api.core.InnerContextAccess;
 import io.sarl.api.core.Lifecycle;
@@ -57,7 +56,6 @@ public class SearchAgent extends Agent {
     this.parent = occurrence.spawner;
     boolean _isEmpty = ((List<Object>)Conversions.doWrapArray(occurrence.parameters)).isEmpty();
     if (_isEmpty) {
-    } else {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
       _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("ROOT AGENT");
     }
@@ -65,61 +63,61 @@ public class SearchAgent extends Agent {
 
   private void $behaviorUnit$MemberLeft$1(final MemberLeft occurrence) {
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("a member left : " + occurrence.agentID));
+    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("map : " + this.map));
+    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info(("A member left : " + occurrence.agentID));
     UUID childID = occurrence.agentID;
-    boolean _contains = this.map.contains(childID);
-    if (_contains) {
-      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info(("before : " + this.map));
+    boolean _containsKey = this.map.containsKey(childID);
+    if (_containsKey) {
       this.map.remove(childID);
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_2 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_2.info(("after : " + this.map));
       int _size = this.map.size();
-      if ((_size <= 0)) {
+      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_2.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
+      int _size_1 = this.map.size();
+      if ((_size_1 <= 0)) {
         Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_3 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_3.info("No more child: I\'m killing myself.");
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_3.info("No more children: killing myself.");
+        DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
+        SearchFinished _searchFinished = new SearchFinished();
+        class $SerializableClosureProxy implements Scope<Address> {
+          
+          private final UUID $_parent;
+          
+          public $SerializableClosureProxy(final UUID $_parent) {
+            this.$_parent = $_parent;
+          }
+          
+          @Override
+          public boolean matches(final Address it) {
+            UUID _iD = it.getID();
+            return Objects.equal(_iD, $_parent);
+          }
+        }
+        final Scope<Address> _function = new Scope<Address>() {
+          @Override
+          public boolean matches(final Address it) {
+            UUID _iD = it.getID();
+            return Objects.equal(_iD, SearchAgent.this.parent);
+          }
+          private Object writeReplace() throws ObjectStreamException {
+            return new SerializableProxy($SerializableClosureProxy.class, SearchAgent.this.parent);
+          }
+        };
+        _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_searchFinished, _function);
         Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
         _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
       }
     }
   }
 
-  private void $behaviorUnit$Destroy$2(final Destroy occurrence) {
-    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-    UUID _iD = occurrence.getSource().getID();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Je me suicide : " + _iD));
-    DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
-    SearchFinished _searchFinished = new SearchFinished();
-    class $SerializableClosureProxy implements Scope<Address> {
-      
-      private final UUID $_parent;
-      
-      public $SerializableClosureProxy(final UUID $_parent) {
-        this.$_parent = $_parent;
-      }
-      
-      @Override
-      public boolean matches(final Address it) {
-        UUID _iD = it.getID();
-        return Objects.equal(_iD, $_parent);
-      }
-    }
-    final Scope<Address> _function = new Scope<Address>() {
-      @Override
-      public boolean matches(final Address it) {
-        UUID _iD = it.getID();
-        return Objects.equal(_iD, SearchAgent.this.parent);
-      }
-      private Object writeReplace() throws ObjectStreamException {
-        return new SerializableProxy($SerializableClosureProxy.class, SearchAgent.this.parent);
-      }
-    };
-    _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_searchFinished, _function);
-    Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+  @SyntheticMember
+  @Pure
+  private boolean $behaviorUnitGuard$MemberLeft$1(final MemberLeft it, final MemberLeft occurrence) {
+    boolean _containsKey = this.map.containsKey(occurrence.agentID);
+    return _containsKey;
   }
 
-  private void $behaviorUnit$ParticipantJoined$3(final ParticipantJoined occurrence) {
+  private void $behaviorUnit$ParticipantJoined$2(final ParticipantJoined occurrence) {
     InnerContextAccess _$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER();
     File _get = this.map.get(occurrence.getSource().getID());
     SearchRequest _searchRequest = new SearchRequest(_get, this.criteria);
@@ -153,11 +151,11 @@ public class SearchAgent extends Agent {
 
   @SyntheticMember
   @Pure
-  private boolean $behaviorUnitGuard$ParticipantJoined$3(final ParticipantJoined it, final ParticipantJoined occurrence) {
+  private boolean $behaviorUnitGuard$ParticipantJoined$2(final ParticipantJoined it, final ParticipantJoined occurrence) {
     return (((!(it != null && this.getID().equals(it.getSource().getID()))) && this.map.containsKey(occurrence.getSource().getID())) && Objects.equal(occurrence.spaceID, this.$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER().getInnerContext().getDefaultSpace().getSpaceID()));
   }
 
-  private void $behaviorUnit$SearchRequest$4(final SearchRequest occurrence) {
+  private void $behaviorUnit$SearchRequest$3(final SearchRequest occurrence) {
     this.criteria = occurrence.criteria;
     this.directory = occurrence.path;
     boolean _exists = this.directory.exists();
@@ -223,9 +221,16 @@ public class SearchAgent extends Agent {
         _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_fileFound, _function_2);
       }
     }
+    int _size = this.map.size();
+    if ((_size <= 0)) {
+      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("No more tasks: killing myself.");
+      Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+      _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+    }
   }
 
-  private void $behaviorUnit$FileFound$5(final FileFound occurrence) {
+  private void $behaviorUnit$FileFound$4(final FileFound occurrence) {
     DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
     FileFound _fileFound = new FileFound(occurrence.path);
     class $SerializableClosureProxy implements Scope<Address> {
@@ -253,67 +258,41 @@ public class SearchAgent extends Agent {
       }
     };
     _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_fileFound, _function);
-    boolean _isEmpty = this.map.isEmpty();
-    if (_isEmpty) {
-      DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
-      Destroy _destroy = new Destroy();
-      class $SerializableClosureProxy_1 implements Scope<Address> {
-        
-        private final UUID $_iD;
-        
-        public $SerializableClosureProxy_1(final UUID $_iD) {
-          this.$_iD = $_iD;
-        }
-        
-        @Override
-        public boolean matches(final Address it) {
-          UUID _iD = it.getID();
-          return Objects.equal(_iD, $_iD);
-        }
-      }
-      final Scope<Address> _function_1 = new Scope<Address>() {
-        @Override
-        public boolean matches(final Address it) {
-          UUID _iD = it.getID();
-          UUID _iD_1 = occurrence.getSource().getID();
-          return Objects.equal(_iD, _iD_1);
-        }
-        private Object writeReplace() throws ObjectStreamException {
-          return new SerializableProxy($SerializableClosureProxy_1.class, occurrence.getSource().getID());
-        }
-      };
-      _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER_1.emit(_destroy, _function_1);
-    }
   }
 
-  private void $behaviorUnit$SearchFinished$6(final SearchFinished occurrence) {
-    DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
-    SearchFinished _searchFinished = new SearchFinished();
-    class $SerializableClosureProxy implements Scope<Address> {
-      
-      private final UUID $_parent;
-      
-      public $SerializableClosureProxy(final UUID $_parent) {
-        this.$_parent = $_parent;
+  private void $behaviorUnit$SearchFinished$5(final SearchFinished occurrence) {
+    boolean _isEmpty = this.map.isEmpty();
+    if (_isEmpty) {
+      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("No more tasks: killing myself.");
+      DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
+      SearchFinished _searchFinished = new SearchFinished();
+      class $SerializableClosureProxy implements Scope<Address> {
+        
+        private final UUID $_parent;
+        
+        public $SerializableClosureProxy(final UUID $_parent) {
+          this.$_parent = $_parent;
+        }
+        
+        @Override
+        public boolean matches(final Address it) {
+          UUID _iD = it.getID();
+          return Objects.equal(_iD, $_parent);
+        }
       }
-      
-      @Override
-      public boolean matches(final Address it) {
-        UUID _iD = it.getID();
-        return Objects.equal(_iD, $_parent);
-      }
+      final Scope<Address> _function = new Scope<Address>() {
+        @Override
+        public boolean matches(final Address it) {
+          UUID _iD = it.getID();
+          return Objects.equal(_iD, SearchAgent.this.parent);
+        }
+        private Object writeReplace() throws ObjectStreamException {
+          return new SerializableProxy($SerializableClosureProxy.class, SearchAgent.this.parent);
+        }
+      };
+      _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_searchFinished, _function);
     }
-    final Scope<Address> _function = new Scope<Address>() {
-      @Override
-      public boolean matches(final Address it) {
-        UUID _iD = it.getID();
-        return Objects.equal(_iD, SearchAgent.this.parent);
-      }
-      private Object writeReplace() throws ObjectStreamException {
-        return new SerializableProxy($SerializableClosureProxy.class, SearchAgent.this.parent);
-      }
-    };
-    _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_searchFinished, _function);
   }
 
   @Extension
@@ -410,18 +389,12 @@ public class SearchAgent extends Agent {
 
   @SyntheticMember
   @PerceptGuardEvaluator
-  private void $guardEvaluator$Destroy(final Destroy occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
-    assert occurrence != null;
-    assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$Destroy$2(occurrence));
-  }
-
-  @SyntheticMember
-  @PerceptGuardEvaluator
   private void $guardEvaluator$MemberLeft(final MemberLeft occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$MemberLeft$1(occurrence));
+    if ($behaviorUnitGuard$MemberLeft$1(occurrence, occurrence)) {
+      ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$MemberLeft$1(occurrence));
+    }
   }
 
   @SyntheticMember
@@ -429,7 +402,7 @@ public class SearchAgent extends Agent {
   private void $guardEvaluator$FileFound(final FileFound occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$FileFound$5(occurrence));
+    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$FileFound$4(occurrence));
   }
 
   @SyntheticMember
@@ -437,7 +410,7 @@ public class SearchAgent extends Agent {
   private void $guardEvaluator$SearchRequest(final SearchRequest occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchRequest$4(occurrence));
+    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchRequest$3(occurrence));
   }
 
   @SyntheticMember
@@ -445,8 +418,8 @@ public class SearchAgent extends Agent {
   private void $guardEvaluator$ParticipantJoined(final ParticipantJoined occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    if ($behaviorUnitGuard$ParticipantJoined$3(occurrence, occurrence)) {
-      ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$ParticipantJoined$3(occurrence));
+    if ($behaviorUnitGuard$ParticipantJoined$2(occurrence, occurrence)) {
+      ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$ParticipantJoined$2(occurrence));
     }
   }
 
@@ -455,14 +428,13 @@ public class SearchAgent extends Agent {
   private void $guardEvaluator$SearchFinished(final SearchFinished occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchFinished$6(occurrence));
+    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchFinished$5(occurrence));
   }
 
   @SyntheticMember
   @Override
   public void $getSupportedEvents(final Set<Class<? extends Event>> toBeFilled) {
     super.$getSupportedEvents(toBeFilled);
-    toBeFilled.add(Destroy.class);
     toBeFilled.add(Initialize.class);
     toBeFilled.add(MemberLeft.class);
     toBeFilled.add(ParticipantJoined.class);
@@ -474,9 +446,6 @@ public class SearchAgent extends Agent {
   @SyntheticMember
   @Override
   public boolean $isSupportedEvent(final Class<? extends Event> event) {
-    if (Destroy.class.isAssignableFrom(event)) {
-      return true;
-    }
     if (Initialize.class.isAssignableFrom(event)) {
       return true;
     }
@@ -502,10 +471,6 @@ public class SearchAgent extends Agent {
   @Override
   public void $evaluateBehaviorGuards(final Object event, final Collection<Runnable> callbacks) {
     super.$evaluateBehaviorGuards(event, callbacks);
-    if (event instanceof Destroy) {
-      final Destroy occurrence = (Destroy) event;
-      $guardEvaluator$Destroy(occurrence, callbacks);
-    }
     if (event instanceof Initialize) {
       final Initialize occurrence = (Initialize) event;
       $guardEvaluator$Initialize(occurrence, callbacks);

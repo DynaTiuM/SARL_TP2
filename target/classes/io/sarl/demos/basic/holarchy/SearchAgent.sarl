@@ -34,41 +34,30 @@ agent SearchAgent {
 
 	on Initialize {
 		parent = occurrence.spawner
-
 		if (occurrence.parameters.isEmpty) {
-		} else {
 			loggingName = "ROOT AGENT"
 		}
 	}
 
-	on MemberLeft {
-		// Could also worked with
-		// on ParticipantLeft [occurrence.spaceID.contextID == innerContext.ID] { // Being sure the corresponding event comes from my internal context
-		// Event-based holarchy destruction
-		info("a member left : " + occurrence.agentID)
-		var childID = occurrence.agentID // use the source of the event if you switch to Participantleft
-		if (map.contains(childID)) {
-			info("before : " + map)
+	on MemberLeft [map.containsKey(occurrence.agentID)] {
+		info("map : " + map)
+		info("A member left : " + occurrence.agentID)
+		var childID = occurrence.agentID
+		if (map.containsKey(childID)) {
 			map.remove(childID)
-			info("after : " + map)
+			info("Child removed. Remaining children: " + map.size)
 			if (map.size <= 0) {
-				info("No more child: I'm killing myself.")
+				info("No more children: killing myself.")
+				emit(new SearchFinished)[it.ID == parent]
 				killMe
 			}
 		}
-	}
-
-	on Destroy {
-		info("Je me suicide : " + occurrence.source.ID)
-		emit(new SearchFinished)[it.ID == parent]
-		killMe
 	}
 
 	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
 		(occurrence.spaceID == innerContext.defaultSpace.spaceID)] {
 		innerContext.defaultSpace.emit(occurrence.source.ID,
 			new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
-		// emit(new SearchRequest(map.get(occurrence.source.ID) as File, criteria)) [it.ID == occurrence.source.ID]
 	}
 
 	on SearchRequest {
@@ -82,9 +71,7 @@ agent SearchAgent {
 		for (subdir : directory.listFiles().toList.filter[isDirectory()]) {
 			info(subdir.getName + " est un dossier.")
 			val aid = UUID::randomUUID
-
 			map.put(aid, new File(subdir.toString()))
-
 			spawnInContextWithID(SearchAgent, aid, innerContext)
 		}
 		for (subfile : directory.listFiles().toList.filter[isFile() && getName.contains(criteria)]) {
@@ -92,17 +79,21 @@ agent SearchAgent {
 			var fileFound = new File(directory, subfile.getName)
 			emit(new FileFound(fileFound))[it.ID == occurrence.source.ID]
 		}
+		
+		if (map.size <= 0) {
+			info("No more tasks: killing myself.")
+			killMe
+		}
 	}
 
 	on FileFound {
 		emit(new FileFound(occurrence.path))[it.ID == parent]
-		if (map.isEmpty()) {
-			//emit(new Destroy())[it.ID == occurrence.source.ID]
-			emit(new Destroy)[it.ID == occurrence.source.ID]
-		}
 	}
 
 	on SearchFinished {
-		emit(new SearchFinished)[it.ID == parent]
+		if (map.isEmpty()) {
+			info("No more tasks: killing myself.")
+			emit(new SearchFinished)[it.ID == parent]
+		}
 	}
 }

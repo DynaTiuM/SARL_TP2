@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import org.eclipse.xtext.xbase.lib.Extension;
+import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.Pure;
 import ui.SearchManagerGUI;
 
@@ -24,14 +25,19 @@ import ui.SearchManagerGUI;
 @SarlElementType(19)
 @SuppressWarnings("all")
 public class BootAgent extends Agent {
+  private final SearchManagerCallback searchManagerCallback = new SearchManagerCallback() {
+    @Override
+    public void onSearch(final String path, final String criteria) {
+      InputOutput.<String>println(((("Received from UI: Path: " + path) + ", Criteria: ") + criteria));
+      Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = BootAgent.this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+      _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class, path, criteria);
+    }
+  };
+
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
-    SearchManagerGUI ui = new SearchManagerGUI();
-    Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class);
+    SearchManagerGUI ui = new SearchManagerGUI(this.searchManagerCallback);
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("Boot");
-    Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER_1.killMe();
   }
 
   @Extension
@@ -94,6 +100,21 @@ public class BootAgent extends Agent {
       final Initialize occurrence = (Initialize) event;
       $guardEvaluator$Initialize(occurrence, callbacks);
     }
+  }
+
+  @Override
+  @Pure
+  @SyntheticMember
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
+
+  @Override
+  @Pure
+  @SyntheticMember
+  public int hashCode() {
+    int result = super.hashCode();
+    return result;
   }
 
   @SyntheticMember

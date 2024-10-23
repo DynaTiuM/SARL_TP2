@@ -1,82 +1,120 @@
 package ui
 
-import java.awt.BorderLayout
-import java.awt.Dimension
-
-import javax.swing.JFrame
 import javax.swing.JButton
 import javax.swing.JComboBox
 
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextField
-import java.lang.reflect.Array
-import javax.swing.DefaultComboBoxModel
-import java.util.ArrayList
 import java.awt.GridBagLayout
 import java.awt.GridBagConstraints
 import java.awt.Insets
+import holarchy.SearchManagerCallback
+import javax.swing.JFrame
+import java.awt.Dimension
+import java.awt.BorderLayout
+import java.awt.^event.ActionEvent
+import java.awt.^event.ActionListener
+import javax.swing.JFileChooser
 
 class SearchManagerGUI extends JFrame {
-
-	// Constructor
-  new {
-		// Set up the frame
-    this.title = "Search Manager GUI"
-    this.preferredSize = new Dimension(300, 300)
-		this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
-		// Create an instance of the custom panel and add it to the frame
-		val panel = new SearchManagerPanel()
-		this.contentPane.add(panel, BorderLayout.CENTER)
-
-		// Pack and display the frame
-		this.pack()
-		this.setVisible(true)
-		this.requestFocus()
+  // Constructor
+	new(callback : SearchManagerCallback) {
+	    // Set up the frame
+	    this.title = "Search Manager GUI"
+	    this.preferredSize = new Dimension(300, 300)
+	    this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+	
+	    // Create an instance of the custom panel and add it to the frame
+	    val panel = new SearchManagerPanel(callback) // Pass the callback here
+	    this.contentPane.add(panel, BorderLayout.CENTER)
+	
+	    // Pack and display the frame
+	    this.pack()
+	    this.setVisible(true)
+	    this.requestFocus()
 	}
+	
 }
 
 class SearchManagerPanel extends JPanel {
 
-  	private val textField : JTextField = new JTextField(15)
-  	private var extensions = newLinkedList('.sarl', '.txt')
+	private val textField : JTextField = new JTextField(15)
+	
+	private var extensions = newLinkedList('.sarl', '.txt')
 	private val comboBox : JComboBox<String> = new JComboBox(extensions)
-  
-	private val okButton: JButton = new JButton("OK")
+	  
+	private val okButton : JButton = new JButton("OK")
+	private val selectFolderButton : JButton = new JButton("Select Folder")
+	private val callback : SearchManagerCallback
 
-	new {
-    // Set layout for the panel
-	this.setLayout(new GridBagLayout())
-	val constraints = new GridBagConstraints()
-	constraints.insets = new Insets(5, 5, 5, 5) // Margin between components
+  	// Constructor
+	new (callback: SearchManagerCallback) {
+	    // Set layout for the panel
+	    this.callback = callback
+	    this.setLayout(new GridBagLayout())
+	    val constraints = new GridBagConstraints()
+	    constraints.insets = new Insets(5, 5, 5, 5) // Margin between components
 	
-	// Add Label and TextField
-	constraints.gridx = 0
-	constraints.gridy = 0
-	constraints.anchor = GridBagConstraints.LINE_END
-	this.add(new JLabel("Text: "), constraints)
+	    // Add Label and TextField
+	    constraints.gridx = 0
+	    constraints.gridy = 0
+	    constraints.anchor = GridBagConstraints.LINE_END
+	    this.add(new JLabel("Text: "), constraints)
 	
-	constraints.gridx = 1
-	constraints.gridy = 0
-	constraints.anchor = GridBagConstraints.LINE_START
-	this.add(textField, constraints)
+	    constraints.gridx = 1
+	    constraints.gridy = 0
+	    constraints.anchor = GridBagConstraints.LINE_START
+	    this.add(textField, constraints)
 	
-	// Add Label and ComboBox
-	constraints.gridx = 0
-	constraints.gridy = 1
-	constraints.anchor = GridBagConstraints.LINE_END
-	this.add(new JLabel("Options: "), constraints)
+	    // Add Label and ComboBox
+	    constraints.gridx = 0
+	    constraints.gridy = 1
+	    constraints.anchor = GridBagConstraints.LINE_END
+	    this.add(new JLabel("Options: "), constraints)
 	
-	constraints.gridx = 1
-	constraints.gridy = 1
-	constraints.anchor = GridBagConstraints.LINE_START
-	this.add(comboBox, constraints)
+	    constraints.gridx = 1
+	    constraints.gridy = 1
+	    constraints.anchor = GridBagConstraints.LINE_START
+	    this.add(comboBox, constraints)
+
+		constraints.gridx = 0
+		constraints.gridy = 2
+		constraints.anchor = GridBagConstraints.LINE_END
+		this.add(selectFolderButton, constraints)
 	
-	// Add OK Button
-    constraints.gridx = 1
-    constraints.gridy = 2
-    constraints.anchor = GridBagConstraints.CENTER
-    this.add(okButton, constraints)
+	    // Add OK Button
+	    constraints.gridx = 1
+	    constraints.gridy = 2
+	    constraints.anchor = GridBagConstraints.CENTER
+	    this.add(okButton, constraints)
+		
+	    // Add ActionListener to OK Button
+	    okButton.addActionListener[
+	      // Call the method to handle button click
+			handleOkButtonClick()
+		]
+
+		selectFolderButton.addActionListener(new ActionListener {
+			def actionPerformed(e : ActionEvent) {
+				val chooser = new JFileChooser()
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+				val returnValue = chooser.showOpenDialog(SearchManagerPanel.this)
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+					val selectedFile = chooser.getSelectedFile
+					textField.setText(selectedFile.getAbsolutePath) 	
+				}
+			}
+		})
+		
 	}
+
+	// Method to handle OK button click
+private def handleOkButtonClick() {
+	    val path = textField.getText
+	    val criteria = comboBox.getSelectedItem.toString
+	
+	    // Trigger the callback to send this data to the BootAgent
+		callback.onSearch(path, criteria)
+  }
 }

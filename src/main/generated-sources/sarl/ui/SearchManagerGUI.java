@@ -1,5 +1,6 @@
 package ui;
 
+import holarchy.SearchManagerCallback;
 import io.sarl.lang.core.annotation.SarlElementType;
 import io.sarl.lang.core.annotation.SarlSpecification;
 import io.sarl.lang.core.annotation.SyntheticMember;
@@ -11,12 +12,12 @@ import javax.swing.JFrame;
 @SarlElementType(10)
 @SuppressWarnings("all")
 public class SearchManagerGUI extends JFrame {
-  public SearchManagerGUI() {
+  public SearchManagerGUI(final SearchManagerCallback callback) {
     this.setTitle("Search Manager GUI");
     Dimension _dimension = new Dimension(300, 300);
     this.setPreferredSize(_dimension);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    final SearchManagerPanel panel = new SearchManagerPanel();
+    final SearchManagerPanel panel = new SearchManagerPanel(callback);
     this.getContentPane().add(panel, BorderLayout.CENTER);
     this.pack();
     this.setVisible(true);
@@ -24,5 +25,5 @@ public class SearchManagerGUI extends JFrame {
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = 2230L;
+  private static final long serialVersionUID = -1129560162L;
 }

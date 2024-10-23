@@ -8,17 +8,25 @@ import io.sarl.api.core.Lifecycle
 import io.sarl.api.core.Logging
 import ui.SearchManagerGUI
 
-/** 
- * 
- */
+capacity SearchManagerCallback {
+  def onSearch(inputText: String, selectedOption: String)
+}
+
 agent BootAgent {
 	uses Logging, Lifecycle
 
+	private val searchManagerCallback : SearchManagerCallback = new SearchManagerCallback {
+	override def onSearch(path : String, criteria : String) {
+	      // Handle the received inputText and selectedOption
+			println("Received from UI: Path: " + path + ", Criteria: " + criteria)
+	      // Now you can spawn the SearchManager with these parameters
+	      spawn(SearchManager, path, criteria)
+	    }
+	  }
+
 	on Initialize {
-		var ui = new SearchManagerGUI()
-		spawn(SearchManager)
+		var ui = new SearchManagerGUI(searchManagerCallback)
 		loggingName = "Boot"
 		
-		killMe
 	}
 }

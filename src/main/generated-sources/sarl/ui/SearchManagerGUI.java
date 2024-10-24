@@ -48,6 +48,7 @@ public class SearchManagerGUI extends JFrame {
     final JScrollPane treeScrollPane = new JScrollPane(this.tree);
     this.getContentPane().add(treeScrollPane, BorderLayout.CENTER);
     this.pack();
+    this.setLocationRelativeTo(null);
     this.setVisible(true);
     this.requestFocus();
   }

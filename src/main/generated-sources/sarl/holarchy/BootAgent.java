@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.inject.Inject;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.Functions.Function0;
-import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.Pure;
 import ui.SearchManagerGUI;
 
@@ -33,20 +32,18 @@ public class BootAgent extends Agent {
   private final SearchManagerCallback searchManagerCallback = new Function0<SearchManagerCallback>() {
     @Override
     public SearchManagerCallback apply() {
-      abstract class __BootAgent_1 extends SearchManagerCallback {
+      abstract class __BootAgent_1 implements SearchManagerCallback {
         public abstract void onSearch(final String path, final String criteria);
       }
 
       __BootAgent_1 ___BootAgent_1 = new __BootAgent_1() {
         public void onSearch(final String path, final String criteria) {
-          abstract class ____BootAgent_0_1 extends SearchResultCallback {
+          abstract class ____BootAgent_0_1 implements SearchResultCallback {
             public abstract void onSearchCompleted(final ConcurrentLinkedQueue<File> foundFiles);
           }
 
-          InputOutput.<String>println(((("Received from UI: Path: " + path) + ", Criteria: ") + criteria));
           final ____BootAgent_0_1 resultListener = new ____BootAgent_0_1() {
             public void onSearchCompleted(final ConcurrentLinkedQueue<File> foundFiles) {
-              InputOutput.<String>println(("Search completed. Found files: " + foundFiles));
               BootAgent.this.ui.updateResults(foundFiles);
             }
           };

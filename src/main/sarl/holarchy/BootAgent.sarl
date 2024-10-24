@@ -10,12 +10,12 @@ import ui.SearchManagerGUI
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.io.File
 
-abstract class SearchManagerCallback {
-  abstract def onSearch(path: String, criteria: String)
+interface SearchManagerCallback {
+  def onSearch(path: String, criteria: String)
 }
 
-abstract class SearchResultCallback {
-	abstract def onSearchCompleted(foundFiles: ConcurrentLinkedQueue<File>)
+interface SearchResultCallback {
+	def onSearchCompleted(foundFiles : ConcurrentLinkedQueue<File>)
 }
 
 agent BootAgent {
@@ -25,11 +25,8 @@ agent BootAgent {
 
 	val searchManagerCallback = new SearchManagerCallback {
 		def onSearch(path : String, criteria : String) {
-			println("Received from UI: Path: " + path + ", Criteria: " + criteria)
-			
 			val resultListener = new SearchResultCallback {
 				def onSearchCompleted(foundFiles: ConcurrentLinkedQueue<File>) {
-					println("Search completed. Found files: " + foundFiles)
 					ui.updateResults(foundFiles)
 				}
 			}
@@ -40,6 +37,5 @@ agent BootAgent {
 	on Initialize {
 		ui = new SearchManagerGUI(searchManagerCallback)
 		loggingName = "Boot"
-		
 	}
 }

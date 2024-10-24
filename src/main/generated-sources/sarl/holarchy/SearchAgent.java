@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Extension;
@@ -45,8 +46,12 @@ public class SearchAgent extends Agent {
 
   private ConcurrentHashMap<UUID, File> map = new ConcurrentHashMap<UUID, File>();
 
+  private AtomicBoolean isSearchFinished;
+
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     this.parent = occurrence.spawner;
+    AtomicBoolean _atomicBoolean = new AtomicBoolean(false);
+    this.isSearchFinished = _atomicBoolean;
     boolean _isEmpty = ((List<Object>)Conversions.doWrapArray(occurrence.parameters)).isEmpty();
     if (_isEmpty) {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
@@ -158,6 +163,7 @@ public class SearchAgent extends Agent {
         _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_fileFound, _function_2);
       }
     }
+    this.isSearchFinished.set(true);
     int _size = this.map.size();
     if ((_size <= 0)) {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
@@ -232,8 +238,7 @@ public class SearchAgent extends Agent {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
       int _size = this.map.size();
       _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
-      int _size_1 = this.map.size();
-      if ((_size_1 <= 0)) {
+      if (((this.map.size() <= 0) && this.isSearchFinished.get())) {
         Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
         _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info("No more children: killing myself.");
         DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();

@@ -9,7 +9,7 @@ import java.util.UUID
 import java.io.File
 import io.sarl.api.core.ParticipantJoined
 import java.util.concurrent.ConcurrentHashMap
-
+import java.util.concurrent.atomic.AtomicBoolean
 
 agent SearchAgent {
 
@@ -20,9 +20,11 @@ agent SearchAgent {
 	var parent : UUID
 
 	var map = new ConcurrentHashMap<UUID, File>()
+	var isSearchFinished : AtomicBoolean
 
 	on Initialize {
 		parent = occurrence.spawner
+		isSearchFinished = new AtomicBoolean(false)
 		if (occurrence.parameters.isEmpty) {
 			loggingName = "ROOT AGENT"
 		}
@@ -54,6 +56,8 @@ agent SearchAgent {
 			emit(new FileFound(fileFound))[it.ID == occurrence.source.ID]
 		}
 		
+		isSearchFinished.set(true)
+		
 		if (map.size <= 0) {
 			info("No more tasks: killing myself.")
 			emit(new SearchFinished)[it.ID == parent]
@@ -70,7 +74,7 @@ agent SearchAgent {
 		if (map.containsKey(childID)) {
 			map.remove(childID)
 			info("Child removed. Remaining children: " + map.size)
-			if (map.size <= 0) {
+			if (map.size <= 0 && isSearchFinished.get()) {
 				info("No more children: killing myself.")
 				emit(new SearchFinished)[it.ID == parent]
 				killMe

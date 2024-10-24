@@ -10,6 +10,7 @@ import java.io.File
 import io.sarl.api.core.ParticipantJoined
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import io.sarl.api.core.Destroy
 
 agent SearchAgent {
 
@@ -25,15 +26,14 @@ agent SearchAgent {
 	on Initialize {
 		parent = occurrence.spawner
 		isSearchFinished = new AtomicBoolean(false)
-		if (occurrence.parameters.isEmpty) {
+		if (!occurrence.parameters.isEmpty) {
 			loggingName = "ROOT AGENT"
 		}
 	}
 
 	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
 		(occurrence.spaceID == innerContext.defaultSpace.spaceID)] {
-		innerContext.defaultSpace.emit(occurrence.source.ID,
-			new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
+		innerContext.defaultSpace.emit(occurrence.source.ID, new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
 	}
 
 	on SearchRequest {
@@ -50,19 +50,23 @@ agent SearchAgent {
 			map.put(aid, new File(subdir.toString()))
 			spawnInContextWithID(SearchAgent, aid, innerContext)
 		}
-		for (subfile : directory.listFiles().toList.filter[isFile() && getName.contains(criteria)]) {
+		
+		for (subfile : directory.listFiles().toList.filter[isFile() && getName.endsWith(criteria)]) {
 			info(subfile.getName + " est un fichier")
-			var fileFound = new File(directory, subfile.getName)
-			emit(new FileFound(fileFound))[it.ID == occurrence.source.ID]
+			var foundFile = new File(directory, subfile.getName)
+			emit(new FileFound(foundFile))[it.ID == occurrence.source.ID]
 		}
 		
 		isSearchFinished.set(true)
 		
 		if (map.size <= 0) {
 			info("No more tasks: killing myself.")
-			emit(new SearchFinished)[it.ID == parent]
 			killMe
 		}
+	}
+	
+	on Destroy {
+		emit(new SearchFinished)[it.ID == parent]
 	}
 
 	on FileFound {
@@ -71,13 +75,15 @@ agent SearchAgent {
 
 	on SearchFinished [map.containsKey(occurrence.source.ID)] {
 		var childID = occurrence.source.ID
-		if (map.containsKey(childID)) {
-			map.remove(childID)
-			info("Child removed. Remaining children: " + map.size)
-			if (map.size <= 0 && isSearchFinished.get()) {
-				info("No more children: killing myself.")
-				emit(new SearchFinished)[it.ID == parent]
-				killMe
+		synchronized (childID) {
+			if (map.containsKey(childID)) {
+				info("map contains : " + childID)
+				map.remove(childID)
+				info("Child removed. Remaining children: " + map.size)
+				if (map.size <= 0 && isSearchFinished.get()) {
+					info("No more children: killing myself.")
+					killMe
+				}
 			}
 		}
 	}

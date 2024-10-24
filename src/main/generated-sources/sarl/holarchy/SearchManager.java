@@ -40,12 +40,16 @@ public class SearchManager extends Agent {
 
   private ConcurrentLinkedQueue<File> paths;
 
+  private SearchResultCallback resultListener;
+
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     Object _get = occurrence.parameters[0];
     File _file = new File((_get == null ? null : _get.toString()));
     this.rootPath = _file;
     Object _get_1 = occurrence.parameters[1];
     this.criteria = (_get_1 == null ? null : _get_1.toString());
+    Object _get_2 = occurrence.parameters[2];
+    this.resultListener = ((SearchResultCallback) _get_2);
     synchronized (this) {
       this.aid = UUID.randomUUID();
       ConcurrentLinkedQueue<File> _concurrentLinkedQueue = new ConcurrentLinkedQueue<File>();
@@ -54,8 +58,6 @@ public class SearchManager extends Agent {
       DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
       _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawnInContextWithID(SearchAgent.class, this.aid, _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.getDefaultContext(), Boolean.valueOf(true));
     }
-    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("Search Manager");
   }
 
   private void $behaviorUnit$ParticipantJoined$1(final ParticipantJoined occurrence) {
@@ -104,11 +106,20 @@ public class SearchManager extends Agent {
 
   private void $behaviorUnit$SearchFinished$3(final SearchFinished occurrence) {
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("Holarchy destroyed. Waiting awhile to ensure that all pending context destruction is processed.");
+    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("Holarchy destroyed.");
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info(("Files found :" + this.paths));
+    this.resultListener.onSearchCompleted(this.paths);
     Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+  }
+
+  @SyntheticMember
+  @Pure
+  private boolean $behaviorUnitGuard$SearchFinished$3(final SearchFinished it, final SearchFinished occurrence) {
+    UUID _iD = occurrence.getSource().getID();
+    boolean _equals = Objects.equal(_iD, this.aid);
+    return _equals;
   }
 
   @Extension
@@ -166,7 +177,9 @@ public class SearchManager extends Agent {
   private void $guardEvaluator$SearchFinished(final SearchFinished occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
     assert occurrence != null;
     assert ___SARLlocal_runnableCollection != null;
-    ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchFinished$3(occurrence));
+    if ($behaviorUnitGuard$SearchFinished$3(occurrence, occurrence)) {
+      ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchFinished$3(occurrence));
+    }
   }
 
   @SyntheticMember

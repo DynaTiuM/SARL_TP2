@@ -13,95 +13,160 @@ import holarchy.SearchManagerCallback
 import javax.swing.JFrame
 import java.awt.Dimension
 import java.awt.BorderLayout
-import java.awt.^event.ActionEvent
-import java.awt.^event.ActionListener
 import javax.swing.JFileChooser
+import javax.swing.JScrollPane
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.JTree
+import javax.swing.tree.DefaultTreeModel
+import java.io.File
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.List
+import java.util.HashMap
+import java.util.Map
+import java.util.LinkedList
 
 class SearchManagerGUI extends JFrame {
-	new(callback : SearchManagerCallback) {
-	    this.title = "Search Manager GUI"
-	    this.preferredSize = new Dimension(500, 300)
-	    this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+	var panel : SearchManagerPanel
+	var tree : JTree
+	var treeModel : DefaultTreeModel
+	var rootPath : String
 	
-	    val panel = new SearchManagerPanel(callback)
-	    this.contentPane.add(panel, BorderLayout.CENTER)
-	
-	    this.pack()
-	    this.setVisible(true)
-	    this.requestFocus()
+	def setRootPath(rootPath: String) {
+		this.rootPath = rootPath
 	}
-	
+
+	new(callback : SearchManagerCallback) {
+		this.title = "Search Manager GUI"
+		this.preferredSize = new Dimension(800, 600)
+		this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+
+		panel = new SearchManagerPanel(callback, this)
+		this.contentPane.add(panel, BorderLayout.NORTH)
+		
+        this.treeModel = new DefaultTreeModel(null)
+        this.tree = new JTree(treeModel)
+		val treeScrollPane = new JScrollPane(this.tree)
+		this.getContentPane().add(treeScrollPane, BorderLayout.CENTER)
+		this.pack()
+		this.setVisible(true)
+        this.requestFocus()
+    }
+
+	def updateResults(foundFiles : ConcurrentLinkedQueue<File>) {
+		val root = new DefaultMutableTreeNode(new File(rootPath).getName)
+        
+		val fileList = new LinkedList<String>
+
+		for (file : foundFiles) {
+            fileList.add(file.getPath)
+		}
+
+		this.panel.createFileTree(root, fileList, rootPath)
+
+		this.treeModel.setRoot(root)
+		this.treeModel.reload()
+	}
 }
 
 class SearchManagerPanel extends JPanel {
-
 	val textField : JTextField = new JTextField(15)
-	
 	val extensions = newLinkedList('.sarl', '.txt')
-	val comboBox : JComboBox<String> = new JComboBox(extensions)
-	  
+    val comboBox : JComboBox<String> = new JComboBox(extensions)
 	val okButton : JButton = new JButton("OK")
-	val selectFolderButton : JButton = new JButton("Select Folder")
-	val callback : SearchManagerCallback
+    val selectFolderButton : JButton = new JButton("Select Folder")
+    val callback : SearchManagerCallback
+    val parentGUI : SearchManagerGUI
 
-	new (callback: SearchManagerCallback) {
-	    this.callback = callback
-	    this.setLayout(new GridBagLayout())
-	    val constraints = new GridBagConstraints()
-	    constraints.insets = new Insets(5, 5, 5, 5)
-	
-	    constraints.gridx = 0
-	    constraints.gridy = 0
-	    constraints.anchor = GridBagConstraints.LINE_END
-	    this.add(new JLabel("Text: "), constraints)
-	
-	    constraints.gridx = 1
-	    constraints.gridy = 0
-	    constraints.anchor = GridBagConstraints.LINE_START
-	    this.add(textField, constraints)
-	
-	    constraints.gridx = 0
-	    constraints.gridy = 1
-	    constraints.anchor = GridBagConstraints.LINE_END
-	    this.add(new JLabel("Options: "), constraints)
-	
-	    constraints.gridx = 1
-	    constraints.gridy = 1
-	    constraints.anchor = GridBagConstraints.LINE_START
-	    this.add(comboBox, constraints)
+    new(callback : SearchManagerCallback, parentGUI : SearchManagerGUI) {
+		this.callback = callback
+		this.parentGUI = parentGUI
+		this.setLayout(new GridBagLayout())
+		val constraints = new GridBagConstraints()
+		constraints.insets = new Insets(5, 5, 5, 5)
+
+		constraints.gridx = 0
+		constraints.gridy = 0
+		constraints.anchor = GridBagConstraints.LINE_END
+		this.add(new JLabel("Text: "), constraints)
+
+        constraints.gridx = 1
+        constraints.gridy = 0
+		constraints.anchor = GridBagConstraints.LINE_START
+		this.add(textField, constraints)
+
+		constraints.gridx = 0
+		constraints.gridy = 1
+		constraints.anchor = GridBagConstraints.LINE_END
+		this.add(new JLabel("Options: "), constraints)
+
+		constraints.gridx = 1
+        constraints.gridy = 1
+        constraints.anchor = GridBagConstraints.LINE_START
+		this.add(comboBox, constraints)
 
 		constraints.gridx = 0
 		constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.LINE_END
 		this.add(selectFolderButton, constraints)
-	
-	    constraints.gridx = 1
-	    constraints.gridy = 2
-	    constraints.anchor = GridBagConstraints.CENTER
-	    this.add(okButton, constraints)
-		
-	    okButton.addActionListener[
+
+		constraints.gridx = 1
+		constraints.gridy = 2
+		constraints.anchor = GridBagConstraints.CENTER
+		this.add(okButton, constraints)
+
+		okButton.addActionListener [
 			handleOkButtonClick()
 		]
 
-		selectFolderButton.addActionListener(new ActionListener {
-			def actionPerformed(e : ActionEvent) {
-				val chooser = new JFileChooser()
-				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
-				val returnValue = chooser.showOpenDialog(SearchManagerPanel.this)
-				if (returnValue == JFileChooser.APPROVE_OPTION) {
-					val selectedFile = chooser.getSelectedFile
-					textField.setText(selectedFile.getAbsolutePath) 	
-				}
-			}
-		})
-		
+		selectFolderButton.addActionListener [
+			handleSelectFolderClick()
+		]
 	}
 
-	private def handleOkButtonClick() {
-	    val path = textField.getText
-	    val criteria = comboBox.getSelectedItem.toString
-	
+	def handleOkButtonClick() {
+		val path = textField.getText
+		val criteria = comboBox.getSelectedItem.toString
 		callback.onSearch(path, criteria)
 	}
+
+	def handleSelectFolderClick() {
+		val chooser = new JFileChooser()
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+		val returnValue = chooser.showOpenDialog(SearchManagerPanel.this)
+		if (returnValue == JFileChooser.APPROVE_OPTION) {
+			val selectedFile = chooser.getSelectedFile
+			textField.setText(selectedFile.getAbsolutePath)
+
+			this.parentGUI.setRootPath(selectedFile.getAbsolutePath)
+		}
+	}
+
+	def createFileTree(rootNode : DefaultMutableTreeNode, fileList : List<String>, rootPath: String) {
+		val nodeMap = new HashMap<String, DefaultMutableTreeNode>
+		nodeMap.put(rootPath, rootNode)
+
+		for (filePath : fileList) {
+			val relativePath = filePath.replace(rootPath + "/", "")
+			addFilePathToTree(rootNode, relativePath, nodeMap)
+		}
+	}
+
+	def addFilePathToTree(rootNode : DefaultMutableTreeNode, filePath : String, nodeMap : Map<String, DefaultMutableTreeNode>) {
+		val parts = filePath.split("/")
+
+		var currentNode = rootNode
+        val currentPath = new StringBuilder(rootNode.toString)
+
+        for (part : parts) {
+            currentPath.append("/").append(part)
+			if (!nodeMap.containsKey(currentPath.toString)) {
+                val newNode = new DefaultMutableTreeNode(part)
+				currentNode.add(newNode)
+				nodeMap.put(currentPath.toString, newNode)
+                currentNode = newNode
+            } else {
+				currentNode = nodeMap.get(currentPath.toString)
+			}
+        }
+    }
 }

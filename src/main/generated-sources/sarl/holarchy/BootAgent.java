@@ -12,9 +12,11 @@ import io.sarl.lang.core.annotation.PerceptGuardEvaluator;
 import io.sarl.lang.core.annotation.SarlElementType;
 import io.sarl.lang.core.annotation.SarlSpecification;
 import io.sarl.lang.core.annotation.SyntheticMember;
+import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.inject.Inject;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.Functions.Function0;
@@ -26,6 +28,8 @@ import ui.SearchManagerGUI;
 @SarlElementType(19)
 @SuppressWarnings("all")
 public class BootAgent extends Agent {
+  private SearchManagerGUI ui;
+
   private final SearchManagerCallback searchManagerCallback = new Function0<SearchManagerCallback>() {
     @Override
     public SearchManagerCallback apply() {
@@ -35,9 +39,19 @@ public class BootAgent extends Agent {
 
       __BootAgent_1 ___BootAgent_1 = new __BootAgent_1() {
         public void onSearch(final String path, final String criteria) {
+          abstract class ____BootAgent_0_1 extends SearchResultCallback {
+            public abstract void onSearchCompleted(final ConcurrentLinkedQueue<File> foundFiles);
+          }
+
           InputOutput.<String>println(((("Received from UI: Path: " + path) + ", Criteria: ") + criteria));
+          final ____BootAgent_0_1 resultListener = new ____BootAgent_0_1() {
+            public void onSearchCompleted(final ConcurrentLinkedQueue<File> foundFiles) {
+              InputOutput.<String>println(("Search completed. Found files: " + foundFiles));
+              BootAgent.this.ui.updateResults(foundFiles);
+            }
+          };
           Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = BootAgent.this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class, path, criteria);
+          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawn(SearchManager.class, path, criteria, resultListener);
         }
       };
       return ___BootAgent_1;
@@ -45,7 +59,8 @@ public class BootAgent extends Agent {
   }.apply();
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
-    SearchManagerGUI ui = new SearchManagerGUI(this.searchManagerCallback);
+    SearchManagerGUI _searchManagerGUI = new SearchManagerGUI(this.searchManagerCallback);
+    this.ui = _searchManagerGUI;
     Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
     _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("Boot");
   }

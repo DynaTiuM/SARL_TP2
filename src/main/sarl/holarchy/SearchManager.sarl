@@ -23,17 +23,20 @@ agent SearchManager {
 	
 	var aid : UUID
 	var paths : ConcurrentLinkedQueue<File>
+	var resultListener : SearchResultCallback
 	
 	on Initialize {
 		this.rootPath = new File(occurrence.parameters.get(0) as String)
 		this.criteria = occurrence.parameters.get(1) as String
+		this.resultListener = occurrence.parameters.get(2) as SearchResultCallback
+		
 		synchronized (this) {
 			aid = UUID::randomUUID
 			paths = new ConcurrentLinkedQueue
 			spawnInContextWithID(SearchAgent, aid, defaultContext, true)
 		}
 		
-		loggingName = "Search Manager"
+		//loggingName = "Search Manager"
 	}
 	
 	on ParticipantJoined [occurrence.source.ID == aid] {
@@ -45,9 +48,12 @@ agent SearchManager {
 		paths.add(occurrence.path)
 	}
 
-	on SearchFinished {
-		info("Holarchy destroyed. Waiting awhile to ensure that all pending context destruction is processed.")
+	on SearchFinished [occurrence.source.ID == aid] {
+		info("Holarchy destroyed.")
 		info("Files found :" + paths)
+		resultListener.onSearchCompleted(paths)
 		killMe
 	}
+	
+	
 }

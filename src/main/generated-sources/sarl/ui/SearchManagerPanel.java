@@ -10,13 +10,17 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.tree.DefaultMutableTreeNode;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Pure;
@@ -37,8 +41,11 @@ public class SearchManagerPanel extends JPanel {
 
   private final SearchManagerCallback callback;
 
-  public SearchManagerPanel(final SearchManagerCallback callback) {
+  private final SearchManagerGUI parentGUI;
+
+  public SearchManagerPanel(final SearchManagerCallback callback, final SearchManagerGUI parentGUI) {
     this.callback = callback;
+    this.parentGUI = parentGUI;
     GridBagLayout _gridBagLayout = new GridBagLayout();
     this.setLayout(_gridBagLayout);
     final GridBagConstraints constraints = new GridBagConstraints();
@@ -74,23 +81,59 @@ public class SearchManagerPanel extends JPanel {
       this.handleOkButtonClick();
     };
     this.okButton.addActionListener(_function);
-    this.selectFolderButton.addActionListener(new ActionListener() {
-      public void actionPerformed(final ActionEvent e) {
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        final int returnValue = chooser.showOpenDialog(SearchManagerPanel.this);
-        if ((returnValue == JFileChooser.APPROVE_OPTION)) {
-          final File selectedFile = chooser.getSelectedFile();
-          SearchManagerPanel.this.textField.setText(selectedFile.getAbsolutePath());
-        }
-      }
-    });
+    final ActionListener _function_1 = (ActionEvent it) -> {
+      this.handleSelectFolderClick();
+    };
+    this.selectFolderButton.addActionListener(_function_1);
   }
 
-  private void handleOkButtonClick() {
+  public void handleOkButtonClick() {
     final String path = this.textField.getText();
     final String criteria = this.comboBox.getSelectedItem().toString();
     this.callback.onSearch(path, criteria);
+  }
+
+  public void handleSelectFolderClick() {
+    final JFileChooser chooser = new JFileChooser();
+    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    final int returnValue = chooser.showOpenDialog(this);
+    if ((returnValue == JFileChooser.APPROVE_OPTION)) {
+      final File selectedFile = chooser.getSelectedFile();
+      this.textField.setText(selectedFile.getAbsolutePath());
+      this.parentGUI.setRootPath(selectedFile.getAbsolutePath());
+    }
+  }
+
+  public void createFileTree(final DefaultMutableTreeNode rootNode, final List<String> fileList, final String rootPath) {
+    final HashMap<String, DefaultMutableTreeNode> nodeMap = new HashMap<String, DefaultMutableTreeNode>();
+    nodeMap.put(rootPath, rootNode);
+    for (final String filePath : fileList) {
+      {
+        final String relativePath = filePath.replace((rootPath + "/"), "");
+        this.addFilePathToTree(rootNode, relativePath, nodeMap);
+      }
+    }
+  }
+
+  public void addFilePathToTree(final DefaultMutableTreeNode rootNode, final String filePath, final Map<String, DefaultMutableTreeNode> nodeMap) {
+    final String[] parts = filePath.split("/");
+    DefaultMutableTreeNode currentNode = rootNode;
+    String _string = rootNode.toString();
+    final StringBuilder currentPath = new StringBuilder(_string);
+    for (final String part : parts) {
+      {
+        currentPath.append("/").append(part);
+        boolean _containsKey = nodeMap.containsKey(currentPath.toString());
+        if ((!_containsKey)) {
+          final DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(part);
+          currentNode.add(newNode);
+          nodeMap.put(currentPath.toString(), newNode);
+          currentNode = newNode;
+        } else {
+          currentNode = nodeMap.get(currentPath.toString());
+        }
+      }
+    }
   }
 
   @Override
@@ -109,5 +152,5 @@ public class SearchManagerPanel extends JPanel {
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = -7939902280L;
+  private static final long serialVersionUID = -2265993662L;
 }

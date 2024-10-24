@@ -7,7 +7,6 @@ import io.sarl.lang.core.annotation.SyntheticMember;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.io.File;
-import java.util.LinkedList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.swing.JFrame;
@@ -34,8 +33,8 @@ public class SearchManagerGUI extends JFrame {
   }
 
   public SearchManagerGUI(final SearchManagerCallback callback) {
-    this.setTitle("Search Manager GUI");
-    Dimension _dimension = new Dimension(800, 600);
+    this.setTitle("Search Manager");
+    Dimension _dimension = new Dimension(700, 600);
     this.setPreferredSize(_dimension);
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     SearchManagerPanel _searchManagerPanel = new SearchManagerPanel(callback, this);
@@ -56,11 +55,7 @@ public class SearchManagerGUI extends JFrame {
   public void updateResults(final ConcurrentLinkedQueue<File> foundFiles) {
     String _name = new File(this.rootPath).getName();
     final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_name);
-    final LinkedList<String> fileList = new LinkedList<String>();
-    for (final File file : foundFiles) {
-      fileList.add(file.getPath());
-    }
-    this.panel.createFileTree(root, fileList, this.rootPath);
+    this.panel.createFileTree(root, foundFiles, this.rootPath);
     this.treeModel.setRoot(root);
     this.treeModel.reload();
   }

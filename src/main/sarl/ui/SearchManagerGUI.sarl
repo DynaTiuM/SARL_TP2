@@ -20,10 +20,8 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultTreeModel
 import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.List
 import java.util.HashMap
 import java.util.Map
-import java.util.LinkedList
 
 class SearchManagerGUI extends JFrame {
 	var panel : SearchManagerPanel
@@ -36,8 +34,8 @@ class SearchManagerGUI extends JFrame {
 	}
 
 	new(callback : SearchManagerCallback) {
-		this.title = "Search Manager GUI"
-		this.preferredSize = new Dimension(800, 600)
+		this.title = "Search Manager"
+		this.preferredSize = new Dimension(700, 600)
 		this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
 		panel = new SearchManagerPanel(callback, this)
@@ -56,13 +54,7 @@ class SearchManagerGUI extends JFrame {
 	def updateResults(foundFiles : ConcurrentLinkedQueue<File>) {
 		val root = new DefaultMutableTreeNode(new File(rootPath).getName)
         
-		val fileList = new LinkedList<String>
-
-		for (file : foundFiles) {
-            fileList.add(file.getPath)
-		}
-
-		this.panel.createFileTree(root, fileList, rootPath)
+		this.panel.createFileTree(root, foundFiles, rootPath)
 
 		this.treeModel.setRoot(root)
 		this.treeModel.reload()
@@ -86,31 +78,32 @@ class SearchManagerPanel extends JPanel {
 		constraints.insets = new Insets(5, 5, 5, 5)
 
 		constraints.gridx = 0
-		constraints.gridy = 0
+		constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.LINE_END
-		this.add(new JLabel("Text: "), constraints)
+		this.add(new JLabel("Path: "), constraints)
 
         constraints.gridx = 1
-        constraints.gridy = 0
+        constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.LINE_START
 		this.add(textField, constraints)
+		this.textField.editable = false
 
-		constraints.gridx = 0
+		constraints.gridx = 2
 		constraints.gridy = 1
 		constraints.anchor = GridBagConstraints.LINE_END
-		this.add(new JLabel("Options: "), constraints)
+		this.add(new JLabel("Extension: "), constraints)
 
-		constraints.gridx = 1
+		constraints.gridx = 3
         constraints.gridy = 1
         constraints.anchor = GridBagConstraints.LINE_START
 		this.add(comboBox, constraints)
 
-		constraints.gridx = 0
-		constraints.gridy = 2
+		constraints.gridx = 1
+		constraints.gridy = 1
 		constraints.anchor = GridBagConstraints.LINE_END
 		this.add(selectFolderButton, constraints)
 
-		constraints.gridx = 1
+		constraints.gridx = 3
 		constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.CENTER
 		this.add(okButton, constraints)
@@ -142,12 +135,37 @@ class SearchManagerPanel extends JPanel {
 		}
 	}
 
-	def createFileTree(rootNode : DefaultMutableTreeNode, fileList : List<String>, rootPath: String) {
+	def createFileTree(rootNode : DefaultMutableTreeNode, foundFiles : ConcurrentLinkedQueue<File>, rootPath : String) {
 		val nodeMap = new HashMap<String, DefaultMutableTreeNode>
 		nodeMap.put(rootPath, rootNode)
 
-		for (filePath : fileList) {
-			val relativePath = filePath.replace(rootPath + "/", "")
+		for (file : foundFiles) {
+			/* 
+			 * Le path absolu correspond au chemin complet permettant d'accéder jusqu'au fichier
+			 * trouvé par les agents.
+			 */
+			val absolutePath = file.getAbsolutePath
+
+			/* 
+			 * La méthode substring permet d'extraire une sous-chaîne à partir de l'index spécifié.
+			 * Ici, nous utilisons rootPath.length + 1 pour obtenir la partie du chemin qui suit 
+			 * immédiatement le chemin racine (rootPath).
+			 * 
+			 * Par exemple, si le chemin absolu est :
+			 * /Users/raphael_perrin/sarl-workspace/AI51_Lab#2_Raphael_PERRIN_A2024/Tree/Dir1/file1.sarl
+			 * et que rootPath est :
+			 * /Users/raphael_perrin/sarl-workspace/AI51_Lab#2_Raphael_PERRIN_A2024/Tree,
+			 * alors relativePath sera :
+			 * Dir1/file1.sarl
+			 * 
+			 * Cela nous permet d'obtenir le chemin relatif par rapport au chemin racine,
+			 * permettant une mise en page de la structure des dossiers beaucoup plus claire.
+			 */
+			val relativePath = absolutePath.substring(rootPath.length + 1)
+			println(relativePath)
+			/* 
+			 * Nous ajoutons les dossiers et fichiers dans la vue de l'arbre
+			 */
 			addFilePathToTree(rootNode, relativePath, nodeMap)
 		}
 	}

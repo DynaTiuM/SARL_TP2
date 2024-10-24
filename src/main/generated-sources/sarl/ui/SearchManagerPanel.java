@@ -12,8 +12,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.tree.DefaultMutableTreeNode;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Conversions;
+import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.Pure;
 
 @SarlSpecification("0.13")
@@ -52,28 +53,29 @@ public class SearchManagerPanel extends JPanel {
     Insets _insets = new Insets(5, 5, 5, 5);
     constraints.insets = _insets;
     constraints.gridx = 0;
-    constraints.gridy = 0;
+    constraints.gridy = 2;
     constraints.anchor = GridBagConstraints.LINE_END;
-    JLabel _jLabel = new JLabel("Text: ");
+    JLabel _jLabel = new JLabel("Path: ");
     this.add(_jLabel, constraints);
     constraints.gridx = 1;
-    constraints.gridy = 0;
+    constraints.gridy = 2;
     constraints.anchor = GridBagConstraints.LINE_START;
     this.add(this.textField, constraints);
-    constraints.gridx = 0;
+    this.textField.setEditable(false);
+    constraints.gridx = 2;
     constraints.gridy = 1;
     constraints.anchor = GridBagConstraints.LINE_END;
-    JLabel _jLabel_1 = new JLabel("Options: ");
+    JLabel _jLabel_1 = new JLabel("Extension: ");
     this.add(_jLabel_1, constraints);
-    constraints.gridx = 1;
+    constraints.gridx = 3;
     constraints.gridy = 1;
     constraints.anchor = GridBagConstraints.LINE_START;
     this.add(this.comboBox, constraints);
-    constraints.gridx = 0;
-    constraints.gridy = 2;
+    constraints.gridx = 1;
+    constraints.gridy = 1;
     constraints.anchor = GridBagConstraints.LINE_END;
     this.add(this.selectFolderButton, constraints);
-    constraints.gridx = 1;
+    constraints.gridx = 3;
     constraints.gridy = 2;
     constraints.anchor = GridBagConstraints.CENTER;
     this.add(this.okButton, constraints);
@@ -104,12 +106,15 @@ public class SearchManagerPanel extends JPanel {
     }
   }
 
-  public void createFileTree(final DefaultMutableTreeNode rootNode, final List<String> fileList, final String rootPath) {
+  public void createFileTree(final DefaultMutableTreeNode rootNode, final ConcurrentLinkedQueue<File> foundFiles, final String rootPath) {
     final HashMap<String, DefaultMutableTreeNode> nodeMap = new HashMap<String, DefaultMutableTreeNode>();
     nodeMap.put(rootPath, rootNode);
-    for (final String filePath : fileList) {
+    for (final File file : foundFiles) {
       {
-        final String relativePath = filePath.replace((rootPath + "/"), "");
+        final String absolutePath = file.getAbsolutePath();
+        int _length = rootPath.length();
+        final String relativePath = absolutePath.substring((_length + 1));
+        InputOutput.<String>println(relativePath);
         this.addFilePathToTree(rootNode, relativePath, nodeMap);
       }
     }
@@ -152,5 +157,5 @@ public class SearchManagerPanel extends JPanel {
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = -2265993662L;
+  private static final long serialVersionUID = -2782675538L;
 }

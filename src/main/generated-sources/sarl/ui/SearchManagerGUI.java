@@ -14,6 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtext.xbase.lib.Pure;
 
 @SarlSpecification("0.13")
@@ -26,11 +27,8 @@ public class SearchManagerGUI extends JFrame {
 
   private DefaultTreeModel treeModel;
 
+  @Accessors
   private String rootPath;
-
-  public void setRootPath(final String rootPath) {
-    this.rootPath = rootPath;
-  }
 
   public SearchManagerGUI(final SearchManagerCallback callback) {
     this.setTitle("Search Manager");
@@ -87,5 +85,14 @@ public class SearchManagerGUI extends JFrame {
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = -3333941331L;
+  private static final long serialVersionUID = -2390273309L;
+
+  @Pure
+  public String getRootPath() {
+    return this.rootPath;
+  }
+
+  public void setRootPath(final String rootPath) {
+    this.rootPath = rootPath;
+  }
 }

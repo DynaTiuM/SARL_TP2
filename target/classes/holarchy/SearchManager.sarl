@@ -26,17 +26,18 @@ agent SearchManager {
 	var resultListener : SearchResultCallback
 	
 	on Initialize {
-		this.rootPath = new File(occurrence.parameters.get(0) as String)
-		this.criteria = occurrence.parameters.get(1) as String
-		this.resultListener = occurrence.parameters.get(2) as SearchResultCallback
-		
 		synchronized (this) {
+
+			this.rootPath = new File(occurrence.parameters.get(0) as String)
+			this.criteria = occurrence.parameters.get(1) as String
+			this.resultListener = occurrence.parameters.get(2) as SearchResultCallback
+		
 			aid = UUID::randomUUID
 			paths = new ConcurrentLinkedQueue
 			spawnInContextWithID(SearchAgent, aid, defaultContext, true)
 		}
 		
-		//loggingName = "Search Manager"
+		loggingName = "Search Manager"
 	}
 	
 	on ParticipantJoined [occurrence.source.ID == aid] {
@@ -44,7 +45,6 @@ agent SearchManager {
 	}
 	
 	on FileFound {
-		info("File received:" + occurrence.path)
 		paths.add(occurrence.path)
 	}
 

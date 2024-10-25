@@ -43,14 +43,14 @@ public class SearchManager extends Agent {
   private SearchResultCallback resultListener;
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
-    Object _get = occurrence.parameters[0];
-    File _file = new File((_get == null ? null : _get.toString()));
-    this.rootPath = _file;
-    Object _get_1 = occurrence.parameters[1];
-    this.criteria = (_get_1 == null ? null : _get_1.toString());
-    Object _get_2 = occurrence.parameters[2];
-    this.resultListener = ((SearchResultCallback) _get_2);
     synchronized (this) {
+      Object _get = occurrence.parameters[0];
+      File _file = new File((_get == null ? null : _get.toString()));
+      this.rootPath = _file;
+      Object _get_1 = occurrence.parameters[1];
+      this.criteria = (_get_1 == null ? null : _get_1.toString());
+      Object _get_2 = occurrence.parameters[2];
+      this.resultListener = ((SearchResultCallback) _get_2);
       this.aid = UUID.randomUUID();
       ConcurrentLinkedQueue<File> _concurrentLinkedQueue = new ConcurrentLinkedQueue<File>();
       this.paths = _concurrentLinkedQueue;
@@ -58,6 +58,8 @@ public class SearchManager extends Agent {
       DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
       _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawnInContextWithID(SearchAgent.class, this.aid, _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.getDefaultContext(), Boolean.valueOf(true));
     }
+    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("Search Manager");
   }
 
   private void $behaviorUnit$ParticipantJoined$1(final ParticipantJoined occurrence) {
@@ -99,8 +101,6 @@ public class SearchManager extends Agent {
   }
 
   private void $behaviorUnit$FileFound$2(final FileFound occurrence) {
-    Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-    _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("File received:" + occurrence.path));
     this.paths.add(occurrence.path);
   }
 

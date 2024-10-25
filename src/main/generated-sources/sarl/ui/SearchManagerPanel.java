@@ -23,7 +23,6 @@ import javax.swing.JTextField;
 import javax.swing.tree.DefaultMutableTreeNode;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Conversions;
-import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.Pure;
 
 @SarlSpecification("0.13")
@@ -114,7 +113,6 @@ public class SearchManagerPanel extends JPanel {
         final String absolutePath = file.getAbsolutePath();
         int _length = rootPath.length();
         final String relativePath = absolutePath.substring((_length + 1));
-        InputOutput.<String>println(relativePath);
         this.addFilePathToTree(rootNode, relativePath, nodeMap);
       }
     }

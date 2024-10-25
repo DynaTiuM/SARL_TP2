@@ -8,6 +8,7 @@ import io.sarl.api.core.InnerContextAccess;
 import io.sarl.api.core.Lifecycle;
 import io.sarl.api.core.Logging;
 import io.sarl.api.core.ParticipantJoined;
+import io.sarl.api.core.Schedules;
 import io.sarl.lang.core.Address;
 import io.sarl.lang.core.Agent;
 import io.sarl.lang.core.AtomicSkillReference;
@@ -21,6 +22,7 @@ import io.sarl.lang.core.annotation.SarlSpecification;
 import io.sarl.lang.core.annotation.SyntheticMember;
 import io.sarl.lang.core.util.SerializableProxy;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.ObjectStreamException;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +35,7 @@ import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
 import org.eclipse.xtext.xbase.lib.Pure;
 
 @SarlSpecification("0.13")
@@ -50,13 +53,15 @@ public class SearchAgent extends Agent {
   private AtomicBoolean isSearchFinished;
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
-    this.parent = occurrence.spawner;
-    AtomicBoolean _atomicBoolean = new AtomicBoolean(false);
-    this.isSearchFinished = _atomicBoolean;
-    boolean _isEmpty = ((List<Object>)Conversions.doWrapArray(occurrence.parameters)).isEmpty();
-    if ((!_isEmpty)) {
-      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("ROOT AGENT");
+    synchronized (this) {
+      this.parent = occurrence.spawner;
+      AtomicBoolean _atomicBoolean = new AtomicBoolean(false);
+      this.isSearchFinished = _atomicBoolean;
+      boolean _isEmpty = ((List<Object>)Conversions.doWrapArray(occurrence.parameters)).isEmpty();
+      if ((!_isEmpty)) {
+        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.setLoggingName("ROOT AGENT");
+      }
     }
   }
 
@@ -105,35 +110,46 @@ public class SearchAgent extends Agent {
     if ((!_exists)) {
       throw new IllegalArgumentException("The directory doesn\'t exist!");
     }
-    final Function1<File, Boolean> _function = (File it) -> {
+    final FileFilter _function = (File it) -> {
+      boolean _isHidden = it.isHidden();
+      return (!_isHidden);
+    };
+    final Function1<File, Boolean> _function_1 = (File it) -> {
       return Boolean.valueOf(it.isDirectory());
     };
-    Iterable<File> _filter = IterableExtensions.<File>filter(IterableExtensions.<File>toList(((Iterable<File>)Conversions.doWrapArray(this.directory.listFiles()))), _function);
+    Iterable<File> _filter = IterableExtensions.<File>filter(IterableExtensions.<File>toList(((Iterable<File>)Conversions.doWrapArray(this.directory.listFiles(_function)))), _function_1);
     for (final File subdir : _filter) {
       {
         Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-        String _name = subdir.getName();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info((_name + " est un dossier."));
-        final UUID aid = UUID.randomUUID();
         String _string = subdir.toString();
-        File _file = new File(_string);
-        this.map.put(aid, _file);
-        Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-        InnerContextAccess _$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawnInContextWithID(SearchAgent.class, aid, _$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER.getInnerContext());
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Directory found: " + _string));
+        final UUID aid = UUID.randomUUID();
+        boolean _containsKey = this.map.containsKey(subdir.toString());
+        if ((!_containsKey)) {
+          String _string_1 = subdir.toString();
+          File _file = new File(_string_1);
+          this.map.put(aid, _file);
+          Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+          InnerContextAccess _$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER();
+          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.spawnInContextWithID(SearchAgent.class, aid, _$CAPACITY_USE$IO_SARL_API_CORE_INNERCONTEXTACCESS$CALLER.getInnerContext());
+        }
       }
     }
-    final Function1<File, Boolean> _function_1 = (File it) -> {
+    final FileFilter _function_2 = (File it) -> {
+      boolean _isHidden = it.isHidden();
+      return (!_isHidden);
+    };
+    final Function1<File, Boolean> _function_3 = (File it) -> {
       return Boolean.valueOf((it.isFile() && it.getName().endsWith(this.criteria)));
     };
-    Iterable<File> _filter_1 = IterableExtensions.<File>filter(IterableExtensions.<File>toList(((Iterable<File>)Conversions.doWrapArray(this.directory.listFiles()))), _function_1);
+    Iterable<File> _filter_1 = IterableExtensions.<File>filter(IterableExtensions.<File>toList(((Iterable<File>)Conversions.doWrapArray(this.directory.listFiles(_function_2)))), _function_3);
     for (final File subfile : _filter_1) {
       {
         Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+        String _string = subfile.toString();
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("File found: " + _string));
         String _name = subfile.getName();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info((_name + " est un fichier"));
-        String _name_1 = subfile.getName();
-        File foundFile = new File(this.directory, _name_1);
+        File foundFile = new File(this.directory, _name);
         DefaultContextInteractions _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER();
         FileFound _fileFound = new FileFound(foundFile);
         class $SerializableClosureProxy implements Scope<Address> {
@@ -150,7 +166,7 @@ public class SearchAgent extends Agent {
             return Objects.equal(_iD, $_iD);
           }
         }
-        final Scope<Address> _function_2 = new Scope<Address>() {
+        final Scope<Address> _function_4 = new Scope<Address>() {
           @Override
           public boolean matches(final Address it) {
             UUID _iD = it.getID();
@@ -161,10 +177,12 @@ public class SearchAgent extends Agent {
             return new SerializableProxy($SerializableClosureProxy.class, occurrence.getSource().getID());
           }
         };
-        _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_fileFound, _function_2);
+        _$CAPACITY_USE$IO_SARL_API_CORE_DEFAULTCONTEXTINTERACTIONS$CALLER.emit(_fileFound, _function_4);
       }
     }
-    this.isSearchFinished.set(true);
+    synchronized (this.isSearchFinished) {
+      this.isSearchFinished.set(true);
+    }
     int _size = this.map.size();
     if ((_size <= 0)) {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
@@ -239,17 +257,19 @@ public class SearchAgent extends Agent {
     synchronized (childID) {
       boolean _containsKey = this.map.containsKey(childID);
       if (_containsKey) {
-        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("map contains : " + childID));
         this.map.remove(childID);
-        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
         int _size = this.map.size();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
         if (((this.map.size() <= 0) && this.isSearchFinished.get())) {
-          Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_2 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-          _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_2.info("No more children: killing myself.");
-          Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+          Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+          _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info("No more children: killing myself.");
+          Schedules _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER();
+          final Procedure1<Agent> _function = (Agent it) -> {
+            Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+            _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+          };
+          _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(100, _function);
         }
       }
     }
@@ -316,6 +336,20 @@ public class SearchAgent extends Agent {
       this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING = $getSkill(Logging.class);
     }
     return $castSkill(Logging.class, this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING);
+  }
+
+  @Extension
+  @ImportedCapacityFeature(Schedules.class)
+  @SyntheticMember
+  private transient AtomicSkillReference $CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES;
+
+  @SyntheticMember
+  @Pure
+  private Schedules $CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER() {
+    if (this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES == null || this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES.get() == null) {
+      this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES = $getSkill(Schedules.class);
+    }
+    return $castSkill(Schedules.class, this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES);
   }
 
   @SyntheticMember

@@ -22,12 +22,11 @@ agent SearchAgent {
 	var parent : UUID
 
 	var map = new ConcurrentHashMap<UUID, File>()
-	var isSearchFinished : AtomicBoolean
+	var isSearchFinished = new AtomicBoolean(false)
 
 	on Initialize {
 		synchronized(this) {
 			parent = occurrence.spawner
-			isSearchFinished = new AtomicBoolean(false)
 			if (!occurrence.parameters.isEmpty) {
 				loggingName = "ROOT AGENT"
 			}
@@ -48,7 +47,7 @@ agent SearchAgent {
 		if (!directory.exists) {
 			throw new IllegalArgumentException("The directory doesn't exist!")
 		}
-
+		
 		for (subdir : directory.listFiles()[!hidden].toList.filter[isDirectory()]) {
 			info("Directory found: " + subdir.toString)
 			val aid = UUID::randomUUID
@@ -68,7 +67,7 @@ agent SearchAgent {
 			isSearchFinished.set(true)
 		}
 
-		if (map.size <= 0) {
+		if (map.empty && isSearchFinished.get) {
 			info("No more tasks: killing myself.")
 			killMe
 		}
@@ -85,16 +84,16 @@ agent SearchAgent {
 	on SearchFinished [map.containsKey(occurrence.source.ID)] {
 		var childID = occurrence.source.ID
 		synchronized (childID) {
-			if (map.containsKey(childID)) {
-				map.remove(childID)
-				info("Child removed. Remaining children: " + map.size)
-				if (map.size <= 0 && isSearchFinished.get()) {
-					info("No more children: killing myself.")
-					in(100) [
-						killMe
-					]
-				}
-			}
+			map.remove(childID)
+			info("Child removed. Remaining children: " + map.size)
+			tryToKillMyself
+		}
+	}
+	
+	def tryToKillMyself() {
+		if (map.empty && isSearchFinished.get) {
+			info("No more children: killing myself.")
+			in(300) [killMe]
 		}
 	}
 }

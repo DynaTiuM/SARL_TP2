@@ -36,6 +36,7 @@ agent BootAgent {
 
 	on Initialize {
 		ui = new SearchManagerGUI(searchManagerCallback)
+		//spawn(SearchManager, "/Users/raphael_perrin/sarl-workspace", ".sarl", null)
 		loggingName = "Boot"
 	}
 }

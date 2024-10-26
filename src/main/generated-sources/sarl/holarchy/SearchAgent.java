@@ -1,6 +1,7 @@
 package holarchy;
 
 import com.google.common.base.Objects;
+import io.sarl.api.core.AgentTask;
 import io.sarl.api.core.DefaultContextInteractions;
 import io.sarl.api.core.Destroy;
 import io.sarl.api.core.Initialize;
@@ -50,13 +51,11 @@ public class SearchAgent extends Agent {
 
   private ConcurrentHashMap<UUID, File> map = new ConcurrentHashMap<UUID, File>();
 
-  private AtomicBoolean isSearchFinished;
+  private AtomicBoolean isSearchFinished = new AtomicBoolean(false);
 
   private void $behaviorUnit$Initialize$0(final Initialize occurrence) {
     synchronized (this) {
       this.parent = occurrence.spawner;
-      AtomicBoolean _atomicBoolean = new AtomicBoolean(false);
-      this.isSearchFinished = _atomicBoolean;
       boolean _isEmpty = ((List<Object>)Conversions.doWrapArray(occurrence.parameters)).isEmpty();
       if ((!_isEmpty)) {
         Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
@@ -183,8 +182,7 @@ public class SearchAgent extends Agent {
     synchronized (this.isSearchFinished) {
       this.isSearchFinished.set(true);
     }
-    int _size = this.map.size();
-    if ((_size <= 0)) {
+    if ((this.map.isEmpty() && this.isSearchFinished.get())) {
       Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
       _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("No more tasks: killing myself.");
       Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
@@ -255,23 +253,11 @@ public class SearchAgent extends Agent {
   private void $behaviorUnit$SearchFinished$5(final SearchFinished occurrence) {
     UUID childID = occurrence.getSource().getID();
     synchronized (childID) {
-      boolean _containsKey = this.map.containsKey(childID);
-      if (_containsKey) {
-        this.map.remove(childID);
-        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-        int _size = this.map.size();
-        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
-        if (((this.map.size() <= 0) && this.isSearchFinished.get())) {
-          Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1 = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-          _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER_1.info("No more children: killing myself.");
-          Schedules _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER();
-          final Procedure1<Agent> _function = (Agent it) -> {
-            Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-            _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
-          };
-          _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(100, _function);
-        }
-      }
+      this.map.remove(childID);
+      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+      int _size = this.map.size();
+      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info(("Child removed. Remaining children: " + Integer.valueOf(_size)));
+      this.tryToKillMyself();
     }
   }
 
@@ -280,6 +266,25 @@ public class SearchAgent extends Agent {
   private boolean $behaviorUnitGuard$SearchFinished$5(final SearchFinished it, final SearchFinished occurrence) {
     boolean _containsKey = this.map.containsKey(occurrence.getSource().getID());
     return _containsKey;
+  }
+
+  protected AgentTask tryToKillMyself() {
+    AgentTask _xifexpression = null;
+    if ((this.map.isEmpty() && this.isSearchFinished.get())) {
+      AgentTask _xblockexpression = null;
+      {
+        Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
+        _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("No more children: killing myself.");
+        Schedules _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER();
+        final Procedure1<Agent> _function = (Agent it) -> {
+          Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
+          _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
+        };
+        _xblockexpression = _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(300, _function);
+      }
+      _xifexpression = _xblockexpression;
+    }
+    return _xifexpression;
   }
 
   @Extension

@@ -141,7 +141,7 @@ class SearchManagerPanel extends JPanel {
 			 * Le path absolu correspond au chemin complet permettant d'accéder jusqu'au fichier
 			 * trouvé par les agents.
 			 */
-			val absolutePath = file.getAbsolutePath
+			val absolutePath = file.getAbsolutePath.replace("\\", '/')
 
 			/* 
 			 * La méthode substring permet d'extraire une sous-chaîne à partir de l'index spécifié.

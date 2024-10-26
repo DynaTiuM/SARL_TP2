@@ -110,7 +110,7 @@ public class SearchManagerPanel extends JPanel {
     nodeMap.put(rootPath, rootNode);
     for (final File file : foundFiles) {
       {
-        final String absolutePath = file.getAbsolutePath();
+        final String absolutePath = file.getAbsolutePath().replace("\\", "/");
         int _length = rootPath.length();
         final String relativePath = absolutePath.substring((_length + 1));
         this.addFilePathToTree(rootNode, relativePath, nodeMap);

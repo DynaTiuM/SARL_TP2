@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -21,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.tree.DefaultMutableTreeNode;
+import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Pure;
@@ -29,9 +31,9 @@ import org.eclipse.xtext.xbase.lib.Pure;
 @SarlElementType(10)
 @SuppressWarnings("all")
 public class SearchManagerPanel extends JPanel {
-  private final JTextField textField = new JTextField(15);
+  private final JTextField textField = new JTextField(20);
 
-  private final LinkedList<String> extensions = CollectionLiterals.<String>newLinkedList(".sarl", ".txt");
+  private final LinkedList<String> extensions = CollectionLiterals.<String>newLinkedList(".sarl", ".txt", ".pom", ".xml", ".java", ".md", ".png");
 
   private final JComboBox<String> comboBox = new JComboBox<String>(((String[])Conversions.unwrapArray(this.extensions, String.class)));
 
@@ -43,11 +45,19 @@ public class SearchManagerPanel extends JPanel {
 
   private final SearchManagerGUI parentGUI;
 
+  @Accessors
+  private final String defaultFoundFilesText = "Number of files found: ";
+
+  @Accessors
+  private final JLabel text = new JLabel();
+
   public SearchManagerPanel(final SearchManagerCallback callback, final SearchManagerGUI parentGUI) {
     this.callback = callback;
     this.parentGUI = parentGUI;
     GridBagLayout _gridBagLayout = new GridBagLayout();
     this.setLayout(_gridBagLayout);
+    this.text.setText(this.defaultFoundFilesText);
+    this.text.setVisible(false);
     final GridBagConstraints constraints = new GridBagConstraints();
     Insets _insets = new Insets(5, 5, 5, 5);
     constraints.insets = _insets;
@@ -86,6 +96,10 @@ public class SearchManagerPanel extends JPanel {
       this.handleSelectFolderClick();
     };
     this.selectFolderButton.addActionListener(_function_1);
+    constraints.gridx = 0;
+    constraints.gridy = 3;
+    constraints.anchor = GridBagConstraints.LINE_START;
+    this.add(this.text, constraints);
   }
 
   public void handleOkButtonClick() {
@@ -143,6 +157,15 @@ public class SearchManagerPanel extends JPanel {
   @Pure
   @SyntheticMember
   public boolean equals(final Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    SearchManagerPanel other = (SearchManagerPanel) obj;
+    if (!Objects.equals(this.defaultFoundFilesText, other.defaultFoundFilesText))
+      return false;
     return super.equals(obj);
   }
 
@@ -151,9 +174,21 @@ public class SearchManagerPanel extends JPanel {
   @SyntheticMember
   public int hashCode() {
     int result = super.hashCode();
+    final int prime = 31;
+    result = prime * result + Objects.hashCode(this.defaultFoundFilesText);
     return result;
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = -2782675538L;
+  private static final long serialVersionUID = -3502462864L;
+
+  @Pure
+  public String getDefaultFoundFilesText() {
+    return this.defaultFoundFilesText;
+  }
+
+  @Pure
+  public JLabel getText() {
+    return this.text;
+  }
 }

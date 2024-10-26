@@ -182,12 +182,7 @@ public class SearchAgent extends Agent {
     synchronized (this.isSearchFinished) {
       this.isSearchFinished.set(true);
     }
-    if ((this.map.isEmpty() && this.isSearchFinished.get())) {
-      Logging _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LOGGING$CALLER.info("No more tasks: killing myself.");
-      Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
-      _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
-    }
+    this.tryToKillMyself();
   }
 
   private void $behaviorUnit$Destroy$3(final Destroy occurrence) {
@@ -280,7 +275,7 @@ public class SearchAgent extends Agent {
           Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
           _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
         };
-        _xblockexpression = _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(300, _function);
+        _xblockexpression = _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(50, _function);
       }
       _xifexpression = _xblockexpression;
     }

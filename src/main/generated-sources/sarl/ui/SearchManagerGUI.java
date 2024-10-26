@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -27,6 +28,8 @@ public class SearchManagerGUI extends JFrame {
 
   private DefaultTreeModel treeModel;
 
+  private JScrollPane treeScrollPane;
+
   @Accessors
   private String rootPath;
 
@@ -42,8 +45,10 @@ public class SearchManagerGUI extends JFrame {
     this.treeModel = _defaultTreeModel;
     JTree _jTree = new JTree(this.treeModel);
     this.tree = _jTree;
-    final JScrollPane treeScrollPane = new JScrollPane(this.tree);
-    this.getContentPane().add(treeScrollPane, BorderLayout.CENTER);
+    JScrollPane _jScrollPane = new JScrollPane(this.tree);
+    this.treeScrollPane = _jScrollPane;
+    this.treeScrollPane.setVisible(false);
+    this.getContentPane().add(this.treeScrollPane, BorderLayout.CENTER);
     this.pack();
     this.setLocationRelativeTo(null);
     this.setVisible(true);
@@ -54,6 +59,13 @@ public class SearchManagerGUI extends JFrame {
     String _name = new File(this.rootPath).getName();
     final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_name);
     this.panel.createFileTree(root, foundFiles, this.rootPath);
+    JLabel _text = this.panel.getText();
+    String _defaultFoundFilesText = this.panel.getDefaultFoundFilesText();
+    String _string = Integer.valueOf(foundFiles.size()).toString();
+    _text.setText((_defaultFoundFilesText + _string));
+    JLabel _text_1 = this.panel.getText();
+    _text_1.setVisible(true);
+    this.treeScrollPane.setVisible(true);
     this.treeModel.setRoot(root);
     this.treeModel.reload();
   }
@@ -85,7 +97,7 @@ public class SearchManagerGUI extends JFrame {
   }
 
   @SyntheticMember
-  private static final long serialVersionUID = -2390273309L;
+  private static final long serialVersionUID = -3800348563L;
 
   @Pure
   public String getRootPath() {

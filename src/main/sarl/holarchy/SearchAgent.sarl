@@ -31,7 +31,6 @@ agent SearchAgent {
 				loggingName = "ROOT AGENT"
 			}
 		}
-		
 	}
 
 	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
@@ -67,10 +66,7 @@ agent SearchAgent {
 			isSearchFinished.set(true)
 		}
 
-		if (map.empty && isSearchFinished.get) {
-			info("No more tasks: killing myself.")
-			killMe
-		}
+		tryToKillMyself
 	}
 	
 	on Destroy {
@@ -93,7 +89,7 @@ agent SearchAgent {
 	def tryToKillMyself() {
 		if (map.empty && isSearchFinished.get) {
 			info("No more children: killing myself.")
-			in(300) [killMe]
+			in(50) [killMe]
 		}
 	}
 }

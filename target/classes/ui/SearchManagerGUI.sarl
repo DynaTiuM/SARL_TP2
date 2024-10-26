@@ -28,6 +28,7 @@ class SearchManagerGUI extends JFrame {
 	var panel : SearchManagerPanel
 	var tree : JTree
 	var treeModel : DefaultTreeModel
+	var treeScrollPane : JScrollPane
 	@Accessors var rootPath : String
 
 	new(callback : SearchManagerCallback) {
@@ -40,7 +41,8 @@ class SearchManagerGUI extends JFrame {
 		
         this.treeModel = new DefaultTreeModel(null)
         this.tree = new JTree(treeModel)
-		val treeScrollPane = new JScrollPane(this.tree)
+		treeScrollPane = new JScrollPane(this.tree)
+		treeScrollPane.visible = false
 		this.getContentPane().add(treeScrollPane, BorderLayout.CENTER)
 		this.pack()
 		this.setLocationRelativeTo(null)
@@ -53,24 +55,33 @@ class SearchManagerGUI extends JFrame {
         
 		this.panel.createFileTree(root, foundFiles, rootPath)
 
+		this.panel.text.text = this.panel.defaultFoundFilesText + foundFiles.size.toString
+		this.panel.text.visible = true
+		this.treeScrollPane.visible = true
 		this.treeModel.setRoot(root)
 		this.treeModel.reload()
 	}
 }
 
 class SearchManagerPanel extends JPanel {
-	val textField : JTextField = new JTextField(15)
-	val extensions = newLinkedList('.sarl', '.txt')
+	val textField : JTextField = new JTextField(20)
+	val extensions = newLinkedList('.sarl', '.txt', '.pom', '.xml', '.java', '.md', '.png')
     val comboBox : JComboBox<String> = new JComboBox(extensions)
 	val okButton : JButton = new JButton("OK")
     val selectFolderButton : JButton = new JButton("Select Folder")
     val callback : SearchManagerCallback
     val parentGUI : SearchManagerGUI
+    @Accessors val defaultFoundFilesText = "Number of files found: "
+    @Accessors val text : JLabel = new JLabel()
 
     new(callback : SearchManagerCallback, parentGUI : SearchManagerGUI) {
 		this.callback = callback
 		this.parentGUI = parentGUI
 		this.setLayout(new GridBagLayout())
+		
+		text.text = defaultFoundFilesText
+		text.visible = false
+		
 		val constraints = new GridBagConstraints()
 		constraints.insets = new Insets(5, 5, 5, 5)
 
@@ -112,6 +123,11 @@ class SearchManagerPanel extends JPanel {
 		selectFolderButton.addActionListener [
 			handleSelectFolderClick()
 		]
+
+		constraints.gridx = 0
+		constraints.gridy = 3
+		constraints.anchor = GridBagConstraints.LINE_START
+		this.add(text, constraints)
 	}
 
 	def handleOkButtonClick() {
@@ -140,6 +156,13 @@ class SearchManagerPanel extends JPanel {
 			/* 
 			 * Le path absolu correspond au chemin complet permettant d'accéder jusqu'au fichier
 			 * trouvé par les agents.
+			 * 
+			 * Le remplacement des \\ est ici réalisé dans le cas d'un environnement Windows, où 
+			 * les dossiers sont délimités par des \\ et non des / comme sous MacOS
+			 * 
+			 * MacOS : /Users/raphael_perrin/sarl-workspace
+			 * Windows : C:\\Programmation\\sarl-workspace
+			 * 
 			 */
 			val absolutePath = file.getAbsolutePath.replace("\\", '/')
 

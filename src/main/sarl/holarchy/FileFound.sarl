@@ -6,7 +6,7 @@ package holarchy
 import java.io.File
 
 /** 
- * 
+ * Event emitted when an agent founds a file
  */
 event FileFound {
 	val path: File

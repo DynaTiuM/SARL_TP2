@@ -6,7 +6,7 @@ package holarchy
 import java.io.File
 
 /** 
- * 
+ * Event emitted to every children of an agent
  */
 event SearchRequest {
 	val path: File

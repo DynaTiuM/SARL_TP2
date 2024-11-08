@@ -263,6 +263,9 @@ public class SearchAgent extends Agent {
     return _containsKey;
   }
 
+  /**
+   * This function kills an agent only if the agent has finished its search and all his children are dead
+   */
   protected AgentTask tryToKillMyself() {
     AgentTask _xifexpression = null;
     if ((this.map.isEmpty() && this.isSearchFinished.get())) {
@@ -275,7 +278,7 @@ public class SearchAgent extends Agent {
           Lifecycle _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER = this.$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER();
           _$CAPACITY_USE$IO_SARL_API_CORE_LIFECYCLE$CALLER.killMe();
         };
-        _xblockexpression = _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(50, _function);
+        _xblockexpression = _$CAPACITY_USE$IO_SARL_API_CORE_SCHEDULES$CALLER.in(100, _function);
       }
       _xifexpression = _xblockexpression;
     }
@@ -360,6 +363,9 @@ public class SearchAgent extends Agent {
     ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$Initialize$0(occurrence));
   }
 
+  /**
+   * This event is emitted when an agent kills itself. It triggers a new SearchFinished event to the parent of the agent
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$Destroy(final Destroy occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -368,6 +374,10 @@ public class SearchAgent extends Agent {
     ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$Destroy$3(occurrence));
   }
 
+  /**
+   * When the SearchFinished event is received, it means that the agent contains the ID of the agent that sent this event
+   * Indeed, the [map.containsKey(occurrence.source.ID)] filters the SearchFinished events
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$SearchFinished(final SearchFinished occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -378,6 +388,11 @@ public class SearchAgent extends Agent {
     }
   }
 
+  /**
+   * When a participant joins the same inner context as the actuel agent,
+   * and that the source ID of the agent that joins is in the map of the agents,
+   * it means that the agent that receives this event needs to send a new SearchRequest event
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$ParticipantJoined(final ParticipantJoined occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -388,6 +403,10 @@ public class SearchAgent extends Agent {
     }
   }
 
+  /**
+   * When a SearchRequest event is received, the agent must in turn carry out the operations of creating new agents
+   * or sending a new FileFound event
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$SearchRequest(final SearchRequest occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -396,6 +415,9 @@ public class SearchAgent extends Agent {
     ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$SearchRequest$2(occurrence));
   }
 
+  /**
+   * When a FileFound event is received by an agent, it relays this event to its father
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$FileFound(final FileFound occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {

@@ -9,6 +9,9 @@ import java.util.Objects;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 
+/**
+ * Event emitted to every children of an agent
+ */
 @SarlSpecification("0.13")
 @SarlElementType(15)
 @SuppressWarnings("all")

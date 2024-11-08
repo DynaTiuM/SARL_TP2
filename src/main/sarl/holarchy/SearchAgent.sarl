@@ -21,75 +21,127 @@ agent SearchAgent {
 	var criteria : String
 	var parent : UUID
 
+	// ConcurrentHashMap for preventing the map being written by different agents at the same time
 	var map = new ConcurrentHashMap<UUID, File>()
+	// AtomicBoolean for threadsafe boolean
 	var isSearchFinished = new AtomicBoolean(false)
 
 	on Initialize {
 		synchronized(this) {
+			// The id of the parent can be retrieved by using the occurrence.spawner
+			// The parent is indeed the agent that spawns the child
 			parent = occurrence.spawner
+			// If the parameters are empty, it means that this is the root agent
+			// i.e. the agent spawned by the Search Manager agent
 			if (!occurrence.parameters.isEmpty) {
+				// We set its name to root agent for more clarity
 				loggingName = "ROOT AGENT"
 			}
 		}
 	}
-
+	
+	/* 
+	 * When a participant joins the same inner context as the actuel agent,
+	 * and that the source ID of the agent that joins is in the map of the agents,
+	 * it means that the agent that receives this event needs to send a new SearchRequest event
+	 */
 	on ParticipantJoined [!(isFromMe) && map.containsKey(occurrence.source.ID) &&
 		(occurrence.spaceID == innerContext.defaultSpace.spaceID)] {
+			/*
+			 * We emit the SearchRequest event to the same context as the actual agent, and we add a condition
+			 * it.ID == occurrence.source.ID in order to be sure that the agent that receives this event is the one
+			 * that joined the innerContext
+			 */ 
 		innerContext.defaultSpace.emit(occurrence.source.ID,
 			new SearchRequest(map.get(occurrence.source.ID) as File, criteria))[it.ID == occurrence.source.ID]
 	}
-
+	
+	/*
+	 * When a SearchRequest event is received, the agent must in turn carry out the operations of creating new agents
+	 * or sending a new FileFound event
+	 */
 	on SearchRequest {
+		// We retrieve the criteria and directory variables passed in parameters of the SearchRequest event
 		criteria = occurrence.criteria
 		directory = occurrence.path
 		
+		// If the directory doesn't exist, we throw a new exception to inform the user that there is a problem
 		if (!directory.exists) {
 			throw new IllegalArgumentException("The directory doesn't exist!")
 		}
 		
+		// Otherwise, we travel every directories, thanks to a filter on a isDirectory() boolean
 		for (subdir : directory.listFiles()[!hidden].toList.filter[isDirectory()]) {
 			info("Directory found: " + subdir.toString)
+			// When a directory is found, it means that we need to create a new agent
+			// That way, we create a new unique ID for the agent:
 			val aid = UUID::randomUUID
+			// If the map of the agent doesn't already contains the path of the directory
 			if (!map.containsKey(subdir.toString)) {
+				// We add it to it, with the corresponding agent id related to this directory
 				map.put(aid, new File(subdir.toString()))
+				// We spawn a new SearchAgent in the innerContext
 				spawnInContextWithID(SearchAgent, aid, innerContext)
 			}
 		}
-
+		
+		// We also travel every files, and we filter them with the criteria selected in the User Interface
 		for (subfile : directory.listFiles()[!hidden].toList.filter[isFile() && getName.endsWith(criteria)]) {
 			info("File found: " + subfile.toString)
+			// When a file is found, we concatenate the directory path with the name of the file found
 			var foundFile = new File(directory, subfile.getName)
+			// And we send it as parameter of a new FileFound event
 			emit(new FileFound(foundFile))[it.ID == occurrence.source.ID]
 		}
 		
+		// When directories and files are traveled, we consider that the search is finished:
 		synchronized (isSearchFinished) {
+			// We set the isSearchFinished boolean to true in order to indicate to other agents that the search is finished
 			isSearchFinished.set(true)
 		}
-
+		
+		// The agent tries to kill itself, it will only occurs if the map is empty and the search is finished
 		tryToKillMyself
 	}
 	
+	/*
+	 * This event is emitted when an agent kills itself. It triggers a new SearchFinished event to the parent of the agent
+	 */
 	on Destroy {
 		emit(new SearchFinished)[it.ID == parent]
 	}
-
+	
+	/*
+	 * When a FileFound event is received by an agent, it relays this event to its father 
+	 */
 	on FileFound {
 		emit(new FileFound(occurrence.path))[it.ID == parent]
 	}
 
+	/*
+	 * When the SearchFinished event is received, it means that the agent contains the ID of the agent that sent this event
+	 * Indeed, the [map.containsKey(occurrence.source.ID)] filters the SearchFinished events
+	 */
 	on SearchFinished [map.containsKey(occurrence.source.ID)] {
+		// That way, we get the ID of the agent that finished its search
 		var childID = occurrence.source.ID
 		synchronized (childID) {
+			// We remove the child id from the map
 			map.remove(childID)
 			info("Child removed. Remaining children: " + map.size)
+			// The agent tries to kill itself, it will only happen if the map is empty and the agent has finished its search 
 			tryToKillMyself
 		}
 	}
 	
+	/**
+	 * This function kills an agent only if the agent has finished its search and all his children are dead
+	 */
 	def tryToKillMyself() {
 		if (map.empty && isSearchFinished.get) {
 			info("No more children: killing myself.")
-			in(50) [killMe]
+			// For some reason, there is a agent not killable error if we don't add a 100ms delay before killing the agent
+			in(100) [killMe]
 		}
 	}
 }

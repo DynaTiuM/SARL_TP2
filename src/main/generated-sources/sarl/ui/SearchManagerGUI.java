@@ -18,6 +18,10 @@ import javax.swing.tree.DefaultTreeModel;
 import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtext.xbase.lib.Pure;
 
+/**
+ * Simple class that extends the JFrame class in order to use the JFarme properties
+ * for a simple User Interface
+ */
 @SarlSpecification("0.13")
 @SarlElementType(10)
 @SuppressWarnings("all")
@@ -33,6 +37,10 @@ public class SearchManagerGUI extends JFrame {
   @Accessors
   private String rootPath;
 
+  /**
+   * This constructor takes in parameters a callback instantiation of class SearchManagerCallback
+   * in order to send informations from the UI to the SearchManager and vice versa
+   */
   public SearchManagerGUI(final SearchManagerCallback callback) {
     this.setTitle("Search Manager");
     Dimension _dimension = new Dimension(700, 600);
@@ -55,6 +63,11 @@ public class SearchManagerGUI extends JFrame {
     this.requestFocus();
   }
 
+  /**
+   * This method update the results to the UI when the search manager returns a list of Files
+   * 
+   * @param foundFiles: a ConcurrentLinkedQueue of Files
+   */
   public void updateResults(final ConcurrentLinkedQueue<File> foundFiles) {
     String _name = new File(this.rootPath).getName();
     final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_name);

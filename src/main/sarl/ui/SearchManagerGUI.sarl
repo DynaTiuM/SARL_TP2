@@ -24,6 +24,10 @@ import java.util.HashMap
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
+/*
+ * Simple class that extends the JFrame class in order to use the JFarme properties
+ * for a simple User Interface
+ */
 class SearchManagerGUI extends JFrame {
 	var panel : SearchManagerPanel
 	var tree : JTree
@@ -31,39 +35,81 @@ class SearchManagerGUI extends JFrame {
 	var treeScrollPane : JScrollPane
 	@Accessors var rootPath : String
 
+	/**
+	 * This constructor takes in parameters a callback instantiation of class SearchManagerCallback
+	 * in order to send informations from the UI to the SearchManager and vice versa
+	 */
 	new(callback : SearchManagerCallback) {
+		// Defining the name of the window to Search Manager
 		this.title = "Search Manager"
+		// We set the dimensions of the window to 700 by 600 (can be resized afterwards) 
 		this.preferredSize = new Dimension(700, 600)
+		// We set the default close operation to EXIT_ON_CLOSE in order to end the programm when clicking the cross
 		this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
+		
+		// We create a new SearchManagerPanel that will welcome some buttons
 		panel = new SearchManagerPanel(callback, this)
 		this.contentPane.add(panel, BorderLayout.NORTH)
 		
+		// We create a new TreeModel that will display the directories found by the agents
         this.treeModel = new DefaultTreeModel(null)
         this.tree = new JTree(treeModel)
+        // We also create a JScrollPane in the case that they are a lot of directories and the user
+        // needs to scroll on the UI
 		treeScrollPane = new JScrollPane(this.tree)
+		// At the beginning, the JScrollPane is not visible, it will be visible only when the search is returned
+		// by the agent manager
 		treeScrollPane.visible = false
 		this.getContentPane().add(treeScrollPane, BorderLayout.CENTER)
 		this.pack()
+		
+		// We set the position of the window to the middle of our screen
 		this.setLocationRelativeTo(null)
+		// We set it to visible in order to display it on the screen
 		this.setVisible(true)
+		// Some formalities to be sure that the focus is on this window in order to interact properly with the UI
         this.requestFocus()
     }
-
+	
+	/**
+	 * This method update the results to the UI when the search manager returns a list of Files
+	 * 
+	 * @param foundFiles: a ConcurrentLinkedQueue of Files
+	 */
 	def updateResults(foundFiles : ConcurrentLinkedQueue<File>) {
+		// The rootPath variable is defined when the user selects the folder in which he wants to launc the programm
+		// cf. handleSelectFolderClick()
 		val root = new DefaultMutableTreeNode(new File(rootPath).getName)
         
+        // We create the tree of files thanks to the files found by the Search Manager and the rootPath
 		this.panel.createFileTree(root, foundFiles, rootPath)
-
+		
+		// We update the text of number of files found by adding the size of the list returned by the Search Manager
 		this.panel.text.text = this.panel.defaultFoundFilesText + foundFiles.size.toString
+		// We set the tree and the textField to visible, in order to display the results
 		this.panel.text.visible = true
 		this.treeScrollPane.visible = true
 		this.treeModel.setRoot(root)
+		// We reload the tree
 		this.treeModel.reload()
 	}
 }
 
+/**
+ * This class extends the JPanel class in order to add JPanel properties to the elements that we want to display to our Panel
+ * 
+ */
 class SearchManagerPanel extends JPanel {
+	/*
+	 * The SearchManagerPanel is characterized by:
+	 * - a textField, that represents a text of the number of files found
+	 * - a list of extensions, using the newLinkedList collection implemented by SARL
+	 * - a comboBox, that will store all these extensions in order to be used on the UI
+	 * - a button "ok" to launc the search
+	 * - a reference to the SearchManagerCallback in order to send the path and criteria from the UI to the Search Manager
+	 * - a reference to the parentGUI in order to change the rootPath of the SearchManagerGUI Frame
+	 * - a label that simply display the path of the folder selected
+	 */
 	val textField : JTextField = new JTextField(20)
 	val extensions = newLinkedList('.sarl', '.txt', '.pom', '.xml', '.java', '.md', '.png')
     val comboBox : JComboBox<String> = new JComboBox(extensions)
@@ -71,20 +117,26 @@ class SearchManagerPanel extends JPanel {
     val selectFolderButton : JButton = new JButton("Select Folder")
     val callback : SearchManagerCallback
     val parentGUI : SearchManagerGUI
+    // The Accessors annotation is really interesting as it creates automatically the setters and getters
     @Accessors val defaultFoundFilesText = "Number of files found: "
     @Accessors val text : JLabel = new JLabel()
 
     new(callback : SearchManagerCallback, parentGUI : SearchManagerGUI) {
 		this.callback = callback
 		this.parentGUI = parentGUI
+		// We create a new GridBadLayout in order to simplify the position of each elements on the Panel
 		this.setLayout(new GridBagLayout())
 		
+		// The default text of the textField is "Number of files found: "
 		text.text = defaultFoundFilesText
+		// And at the beginning, this text is not visible
 		text.visible = false
 		
 		val constraints = new GridBagConstraints()
+		// We set some "padding" of 5 between each elements, so that they are not crowded together 
 		constraints.insets = new Insets(5, 5, 5, 5)
-
+		
+		// We place every Widgets, according to their position in the grid
 		constraints.gridx = 0
 		constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.LINE_END
@@ -115,11 +167,13 @@ class SearchManagerPanel extends JPanel {
 		constraints.gridy = 2
 		constraints.anchor = GridBagConstraints.CENTER
 		this.add(okButton, constraints)
-
+		
+		// We add an action Listener to the ok button, in order to trigger the handleOkButtonClick() function
 		okButton.addActionListener [
 			handleOkButtonClick()
 		]
 
+		// We do the same with the select button folder
 		selectFolderButton.addActionListener [
 			handleSelectFolderClick()
 		]
@@ -130,80 +184,124 @@ class SearchManagerPanel extends JPanel {
 		this.add(text, constraints)
 	}
 
+	/**
+	 * This function gets the path of the folder selected by the user and the criteria
+	 * (= extension) selected in the comboBox
+	 */
 	def handleOkButtonClick() {
 		val path = textField.getText
 		val criteria = comboBox.getSelectedItem.toString
+		// We trigger the callback class by calling its onSearch function and passing the path and criteria into parameters
 		callback.onSearch(path, criteria)
 	}
-
+	
+	/**
+	 * This function triggers the search of a folder into the finder (or file explorer)
+	 * and stores the path into the textField Widget in order to keep a trace of the folder path
+	 */
 	def handleSelectFolderClick() {
+		// We create a new file chooser dialog
 		val chooser = new JFileChooser()
+		// We set the file chooser to only allow directory selection (no files accepted)
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+		// We show the file chooser dialog and we store the user's response into a returnValue variable
 		val returnValue = chooser.showOpenDialog(SearchManagerPanel.this)
+
+		// If the user selected a directory and confirmed
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
+			// We get the selected directory as a File object
 			val selectedFile = chooser.getSelectedFile
+			// And we set the selected directory path in the text field
 			textField.setText(selectedFile.getAbsolutePath)
 
+			// Finally, we update the root path in the parent GUI (= SearchManagerGUI) with the selected directory path
 			this.parentGUI.setRootPath(selectedFile.getAbsolutePath)
 		}
 	}
 
+	/** 
+	 * This function creates a file tree structure starting from a root node. 
+	 * It takes a list of found files and organizes them hierarchically 
+	 * under the specified root path, adding nodes for each file and directory.
+	 * 
+	 * @param rootNode: the root node of the tree
+	 * @param foundFiles: a list of files to be organized in the tree
+	 * @param rootPath: the root path to start the file tree structure
+	 */
 	def createFileTree(rootNode : DefaultMutableTreeNode, foundFiles : ConcurrentLinkedQueue<File>, rootPath : String) {
+		// We create a map in order to store each path and its corresponding tree node
 		val nodeMap = new HashMap<String, DefaultMutableTreeNode>
 		nodeMap.put(rootPath, rootNode)
 
+		// We iterate over all files found by the agents
 		for (file : foundFiles) {
 			/* 
-			 * Le path absolu correspond au chemin complet permettant d'accéder jusqu'au fichier
-			 * trouvé par les agents.
+			 * The absolute path is the complete path to access the file found by the agents.
 			 * 
-			 * Le remplacement des \\ est ici réalisé dans le cas d'un environnement Windows, où 
-			 * les dossiers sont délimités par des \\ et non des / comme sous MacOS
+			 * Replacing \\ with / is necessary on Windows, where folders are delimited by \\ 
+			 * instead of / as on MacOS.
 			 * 
-			 * MacOS : /Users/raphael_perrin/sarl-workspace
-			 * Windows : C:\\Programmation\\sarl-workspace
-			 * 
+			 * MacOS example: /Users/raphael_perrin/sarl-workspace
+			 * Windows example: C:\\Programmation\\sarl-workspace
 			 */
 			val absolutePath = file.getAbsolutePath.replace("\\", '/')
 
 			/* 
-			 * La méthode substring permet d'extraire une sous-chaîne à partir de l'index spécifié.
-			 * Ici, nous utilisons rootPath.length + 1 pour obtenir la partie du chemin qui suit 
-			 * immédiatement le chemin racine (rootPath).
+			 * The substring method extracts a substring from the specified index.
+			 * Here, we use rootPath.length + 1 to get the part of the path immediately
+			 * following the root path (rootPath).
 			 * 
-			 * Par exemple, si le chemin absolu est :
+			 * For example, if the absolute path is:
 			 * /Users/raphael_perrin/sarl-workspace/AI51_Lab#2_Raphael_PERRIN_A2024/Tree/Dir1/file1.sarl
-			 * et que rootPath est :
-			 * /Users/raphael_perrin/sarl-workspace/AI51_Lab#2_Raphael_PERRIN_A2024/Tree,
-			 * alors relativePath sera :
+			 * and rootPath is:
+			 * /Users/raphael_perrin/sarl-workspace/AI51_Lab#2_Raphael_PERRIN_A2024/Tree
+			 * then relativePath will be:
 			 * Dir1/file1.sarl
 			 * 
-			 * Cela nous permet d'obtenir le chemin relatif par rapport au chemin racine,
-			 * permettant une mise en page de la structure des dossiers beaucoup plus claire.
+			 * This gives the relative path from the root path, allowing a clearer 
+			 * display of the folder structure in the UI.
 			 */
 			val relativePath = absolutePath.substring(rootPath.length + 1)
 			
-			/* 
-			 * Nous ajoutons les dossiers et fichiers dans la vue de l'arbre
-			 */
+			// We add folders and files to the tree view
 			addFilePathToTree(rootNode, relativePath, nodeMap)
 		}
 	}
 
+	/** 
+	 * This function adds a file path to the tree structure by splitting it into parts.
+	 * It creates new nodes for each directory and file part of the path that does not already exist in the tree.
+	 * 
+	 * @param rootNode: the root node of the tree
+	 * @param filePath: the path of the file or directory to add
+	 * @param nodeMap: a map that keeps track of the created nodes by path
+	 */
 	def addFilePathToTree(rootNode : DefaultMutableTreeNode, filePath : String, nodeMap : Map<String, DefaultMutableTreeNode>) {
+		
+		// We split the file path into its directory paths
 		val parts = filePath.split("/")
 
+		// We start from the root node and build the tree structure for each directory level
 		var currentNode = rootNode
         val currentPath = new StringBuilder(rootNode.toString)
 
         for (part : parts) {
             currentPath.append("/").append(part)
+            
+			// If the current path part doesn't exist in the map, we create a new tree node for it
 			if (!nodeMap.containsKey(currentPath.toString)) {
                 val newNode = new DefaultMutableTreeNode(part)
+
+				// We add the new node to the current tree node
 				currentNode.add(newNode)
+
+				// We store the path and the new node in the map
 				nodeMap.put(currentPath.toString, newNode)
+				
+				// We move down to the new node in the tree structure
                 currentNode = newNode
             } else {
+				// If the node already exists, we move to it in the tree
 				currentNode = nodeMap.get(currentPath.toString)
 			}
         }

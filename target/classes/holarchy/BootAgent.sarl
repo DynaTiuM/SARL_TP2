@@ -10,10 +10,12 @@ import ui.SearchManagerGUI
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.io.File
 
+// Interface used to handle search parameters from the UI
 interface SearchManagerCallback {
   def onSearch(path: String, criteria: String)
 }
 
+// Interface used to handle the callback after a search is completed
 interface SearchResultCallback {
 	def onSearchCompleted(foundFiles : ConcurrentLinkedQueue<File>)
 }
@@ -21,20 +23,28 @@ interface SearchResultCallback {
 agent BootAgent {
 	uses Logging, Lifecycle
 	
-	var ui: SearchManagerGUI
+	var ui : SearchManagerGUI
 
+	// We define an implementation of SearchManagerCallback interface. This object is created as an anonymous inner class.
+	// This is as convenient way to directly pass this implementation in the SearchManagerGUI() constructor
 	val searchManagerCallback = new SearchManagerCallback {
+		// We override the onSearch method of the SearchManagerCallback interface
 		def onSearch(path : String, criteria : String) {
+			// We create a listener for search results using another anonymous inner class
 			val resultListener = new SearchResultCallback {
+				// And we also override onSearchCompleted() to update the UI when the search is finished
 				def onSearchCompleted(foundFiles: ConcurrentLinkedQueue<File>) {
 					ui.updateResults(foundFiles)
 				}
 			}
+			// Finally, we start a new SearchManager agent to begin the search,
+			// passing the search criteria and result listener in parameters of the spawn
 			spawn(SearchManager, path, criteria, resultListener)
 		}
 	}
 
 	on Initialize {
+		// We initialize the UI with the search manager callback
 		ui = new SearchManagerGUI(searchManagerCallback)
 		loggingName = "Boot"
 	}

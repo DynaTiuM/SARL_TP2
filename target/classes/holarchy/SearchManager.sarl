@@ -27,31 +27,56 @@ agent SearchManager {
 	
 	on Initialize {
 		synchronized (this) {
-
+			/*
+			 * The Search Manager retrieves the rootPath, criteria thanks to the parameters passed in the spawn()
+			 */
 			this.rootPath = new File(occurrence.parameters.get(0) as String)
 			this.criteria = occurrence.parameters.get(1) as String
+			
+			// We also retrieve the resultListener, that will be called once the Search is Finished
 			this.resultListener = occurrence.parameters.get(2) as SearchResultCallback
-		
+			
+			// We define a new random ID for the first SearchAgent
+			// that will be spawned in the same defaultContext as the Search Manager and Boot
 			aid = UUID::randomUUID
+			// We create a list of File, that will store all the files found by the agents
 			paths = new ConcurrentLinkedQueue
+			// We spawn the first SearchAgent
 			spawnInContextWithID(SearchAgent, aid, defaultContext, true)
 		}
 		
 		loggingName = "Search Manager"
 	}
 	
+	/*
+	 * When a participant joins, it needs to be the participant created by the SearchManager,
+	 * that means the first Search Agent. This verification is done by verifying that the source ID
+	 * of the occurrence that spawned is the same as the aid of the Search Agent created by the Search Manager
+	 */
 	on ParticipantJoined [occurrence.source.ID == aid] {
+		// If this is the case, we create a new Search Request that is directed to the first Search Agent
+		// (condition it.ID == aid)
 		emit(new SearchRequest(rootPath, criteria))[it.ID == aid]
 	}
 	
+	/*
+	 * When the Search Manager receives the FileFound event, it stores the file path emitted to its List of paths
+	 */
 	on FileFound {
 		paths.add(occurrence.path)
 	}
-
+	
+	/*
+	 * When the SearchFinished event is received, it means that this event was sent by the Agent that the Search Manager
+	 * created (condition : occurrence.source.ID == aid)
+	 */
 	on SearchFinished [occurrence.source.ID == aid] {
+		// The first Search Agent is destroyed, it means all the other Search Agent are dead. The Search Manager can kill itself
 		info("Holarchy destroyed.")
 		info("Files found :" + paths)
+		// We call the onSearchCompleted() method of the resultListener in order to send the file paths to the UI
 		resultListener.onSearchCompleted(paths)
+		// We finally kill the Search Manager. All the Agents (except Boot) are dead.
 		killMe
 	}
 	

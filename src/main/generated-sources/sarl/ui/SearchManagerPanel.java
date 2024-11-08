@@ -27,10 +27,23 @@ import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Pure;
 
+/**
+ * This class extends the JPanel class in order to add JPanel properties to the elements that we want to display to our Panel
+ */
 @SarlSpecification("0.13")
 @SarlElementType(10)
 @SuppressWarnings("all")
 public class SearchManagerPanel extends JPanel {
+  /**
+   * The SearchManagerPanel is characterized by:
+   * - a textField, that represents a text of the number of files found
+   * - a list of extensions, using the newLinkedList collection implemented by SARL
+   * - a comboBox, that will store all these extensions in order to be used on the UI
+   * - a button "ok" to launc the search
+   * - a reference to the SearchManagerCallback in order to send the path and criteria from the UI to the Search Manager
+   * - a reference to the parentGUI in order to change the rootPath of the SearchManagerGUI Frame
+   * - a label that simply display the path of the folder selected
+   */
   private final JTextField textField = new JTextField(20);
 
   private final LinkedList<String> extensions = CollectionLiterals.<String>newLinkedList(".sarl", ".txt", ".pom", ".xml", ".java", ".md", ".png");
@@ -102,12 +115,20 @@ public class SearchManagerPanel extends JPanel {
     this.add(this.text, constraints);
   }
 
+  /**
+   * This function gets the path of the folder selected by the user and the criteria
+   * (= extension) selected in the comboBox
+   */
   public void handleOkButtonClick() {
     final String path = this.textField.getText();
     final String criteria = this.comboBox.getSelectedItem().toString();
     this.callback.onSearch(path, criteria);
   }
 
+  /**
+   * This function triggers the search of a folder into the finder (or file explorer)
+   * and stores the path into the textField Widget in order to keep a trace of the folder path
+   */
   public void handleSelectFolderClick() {
     final JFileChooser chooser = new JFileChooser();
     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -119,6 +140,15 @@ public class SearchManagerPanel extends JPanel {
     }
   }
 
+  /**
+   * This function creates a file tree structure starting from a root node.
+   * It takes a list of found files and organizes them hierarchically
+   * under the specified root path, adding nodes for each file and directory.
+   * 
+   * @param rootNode: the root node of the tree
+   * @param foundFiles: a list of files to be organized in the tree
+   * @param rootPath: the root path to start the file tree structure
+   */
   public void createFileTree(final DefaultMutableTreeNode rootNode, final ConcurrentLinkedQueue<File> foundFiles, final String rootPath) {
     final HashMap<String, DefaultMutableTreeNode> nodeMap = new HashMap<String, DefaultMutableTreeNode>();
     nodeMap.put(rootPath, rootNode);
@@ -132,6 +162,14 @@ public class SearchManagerPanel extends JPanel {
     }
   }
 
+  /**
+   * This function adds a file path to the tree structure by splitting it into parts.
+   * It creates new nodes for each directory and file part of the path that does not already exist in the tree.
+   * 
+   * @param rootNode: the root node of the tree
+   * @param filePath: the path of the file or directory to add
+   * @param nodeMap: a map that keeps track of the created nodes by path
+   */
   public void addFilePathToTree(final DefaultMutableTreeNode rootNode, final String filePath, final Map<String, DefaultMutableTreeNode> nodeMap) {
     final String[] parts = filePath.split("/");
     DefaultMutableTreeNode currentNode = rootNode;

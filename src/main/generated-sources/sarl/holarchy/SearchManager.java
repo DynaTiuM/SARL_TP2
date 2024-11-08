@@ -172,6 +172,10 @@ public class SearchManager extends Agent {
     ___SARLlocal_runnableCollection.add(() -> $behaviorUnit$Initialize$0(occurrence));
   }
 
+  /**
+   * When the SearchFinished event is received, it means that this event was sent by the Agent that the Search Manager
+   * created (condition : occurrence.source.ID == aid)
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$SearchFinished(final SearchFinished occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -182,6 +186,11 @@ public class SearchManager extends Agent {
     }
   }
 
+  /**
+   * When a participant joins, it needs to be the participant created by the SearchManager,
+   * that means the first Search Agent. This verification is done by verifying that the source ID
+   * of the occurrence that spawned is the same as the aid of the Search Agent created by the Search Manager
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$ParticipantJoined(final ParticipantJoined occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
@@ -192,6 +201,9 @@ public class SearchManager extends Agent {
     }
   }
 
+  /**
+   * When the Search Manager receives the FileFound event, it stores the file path emitted to its List of paths
+   */
   @SyntheticMember
   @PerceptGuardEvaluator
   private void $guardEvaluator$FileFound(final FileFound occurrence, final Collection<Runnable> ___SARLlocal_runnableCollection) {
